@@ -148,7 +148,7 @@ which apt-get >/dev/null 2>&1 && alias apt-get='sudo \apt-get -y'
 #alias cd-=_cd--
 alias cd?=dirs
 alias cd..="cd .."
-alias cp='\cp --preserve'
+alias cp='\cp --preserve --interactive'
 alias crontab_all='for f in `sudo ls -b /var/spool/cron` ; do echo $f ; sudo cat /var/spool/cron/$f ; done;'
 alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {} \;'
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
@@ -162,10 +162,12 @@ alias ll='ls -l'
 alias ls='ls --classify --color=tty --human-readable'
 alias m=more
 alias make_list='make -p 2>/dev/null | grep -A 100000 "# Files" | grep -v "^$" | grep -v "^\(\s\|#\|\.\)" | grep -v "Makefile:" | cut -d ":" -f 1 | sort -u'
+alias mv='\mv --interactive'
 alias ps!='ps -axfo pid,uname,%cpu,%mem,cmd'
 alias popd='\popd >/dev/null'
 alias pushd='\pushd >/dev/null'
 which free >/dev/null 2>&1 && alias ram='free -m | grep Mem | awk "{printf \"%d MB / \%d MB (\%3.1f%\%)\n\", \$3, \$2, \$3*100/\$2}" 2>/dev/null'
+alias rm='\rm --interactive'
 alias script_echo='[[ -n "${SSH_TTY:-$(tty)}" ]] && echo' # only echo if in interactive session
 alias shit='echodo $(history -p \!\!) | less'
 alias watch_that='echodo watch --beep --differences --interval 1 $(history -p \!\!)'
