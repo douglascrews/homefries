@@ -1,8 +1,9 @@
 script_echo Git s[ucks]etup...
 
 # Install Git as needed
-git --version 2>/dev/null || ${PACKAGE_MANAGER} install git
+git --version 2>/dev/null || sudo ${PACKAGE_MANAGER} -y install git
 
+export git_user=douglascrews
 export git_email=github@crewstopia.com
 export git_home=github.com
 
@@ -19,7 +20,7 @@ fi
 
 eval $(ssh-agent -s) >/dev/null 2>&1
 
-ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (eval $(ssh-agent) && ssh-add ~/.ssh/${git_home}.pem && ssh -T git@${git_home} >/dev/null))
+ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (eval $(ssh-agent) && ssh-add ~/.ssh/${git_user}@github.pem && ssh -T git@${git_home} >/dev/null))
 
 function git_branch_show
 {
