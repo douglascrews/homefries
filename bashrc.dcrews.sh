@@ -173,6 +173,9 @@ alias shit='echodo $(history -p \!\!) | less'
 alias watch_that='echodo watch --beep --differences --interval 1 $(history -p \!\!)'
 which yum 2>/dev/null && alias yum='sudo \yum -y'
 
+# Enable Terraform cli tab autocomplete
+which terraform && complete -C /usr/bin/terraform terraform
+
 # Automagically alias all ~/bin/*.sh scripts
 if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh`=". ~/bin/`basename $f`"; done; fi;
 
