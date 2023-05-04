@@ -15,6 +15,9 @@ function git_branch_show {
 	echo ""
 }
 
+# Enable bash completion for Maven
+#which mvn >/dev/null 2>&1 && . ~/.mvn_bash_completion.sh
+
 export PS1="[\[${colorCyan}\]\u@\h\[${colorReset}\] \[${colorYellow}\]\W\[${colorReset}\]\$(git_branch_show)]\$ "
 
 ##### Shell Functions #####
@@ -182,11 +185,11 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 (which docker >/dev/null 2>&1 && [[ -r ~/.bashrc.docker ]]) && . ~/.bashrc.docker
 (which git >/dev/null 2>&1 && [[ -r ~/.bashrc.git ]]) && . ~/.bashrc.git
 (which kubectl >/dev/null 2>&1 && [[ -r ~/.bashrc.kubernetes ]]) && . ~/.bashrc.kubernetes
+(which mvn >/dev/null 2>&1 && [[ -r ~/.bashrc.maven ]]) && . ~/.bashrc.maven
 (which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
 (which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
-if [[ -d ./.devcontainer ]]; then
-   . ~/.bashrc.devcontainer
-fi
+[[ -d ./.devcontainer ]] &&  . ~/.bashrc.devcontainer
+[[ -r ./.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 #echo DEBUG Finished calling sub-bashrc files
 
 salutation() {
