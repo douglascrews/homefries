@@ -188,8 +188,8 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 (which mvn >/dev/null 2>&1 && [[ -r ~/.bashrc.maven ]]) && . ~/.bashrc.maven
 (which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
 (which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
-[[ -d ./.devcontainer ]] &&  . ~/.bashrc.devcontainer
-[[ -r ./.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
+[[ -d ~/.devcontainer ]] &&  . ~/.bashrc.devcontainer
+[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 #echo DEBUG Finished calling sub-bashrc files
 
 salutation() {

@@ -12,7 +12,7 @@ _get_comp_words_by_ref ()
         exclude=$2;
         shift 2;
     fi;
-    __git_reassemble_comp_words_by_ref "$exclude";
+#    __git_reassemble_comp_words_by_ref "$exclude";
     cur_=${words_[cword_]};
     while [ $# -gt 0 ]; do
         case "$1" in
