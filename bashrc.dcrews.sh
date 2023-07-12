@@ -7,7 +7,7 @@ echo Setting up local environment...
 #######################################
 # Local setup
 #######################################
-(which firewall-cmd > /dev/null 2>&1) && (sudo firewall-cmd --zone=public --add-port=8080/tcp && sudo firewall-cmd --zone=public --list-all && sudo iptables -L -n)
+#(which firewall-cmd > /dev/null 2>&1) && (sudo firewall-cmd --zone=public --add-port=8080/tcp && sudo firewall-cmd --zone=public --list-all && sudo iptables -L -n)
 
 [[ -r ~/.bashrc.colors ]] && . ~/.bashrc.colors
 
