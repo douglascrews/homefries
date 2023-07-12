@@ -14,6 +14,9 @@ drun() {
 dbash() {
 	docker exec -it ${1:-busybox:latest} bash $2 $3 $4 $5 $6 $7 $8 $9
 }
+docker_ip() {
+	docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${1:-"Container ID is needed"}
+}
 #if [[ ! -x /usr/local/bin/docker-compose ]]; then
 #	echo "Downloading Docker Compose latest..."
 #	# Latest version: https://github.com/docker/compose/releases/latest

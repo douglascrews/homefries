@@ -18,11 +18,13 @@ which pip >/dev/null 2>&1 || (echo "Installing pip..." && cd && wget https://boo
 # Get rid of those annoying "you are running an old version of pip" warnings
 python -m pip install --upgrade pip >/dev/null 2>&1
 # Make sure setuptools is up to date
-python -m pip install --upgrade setuptools
+python -m pip install --upgrade setuptools >/dev/null 2>&1
+# pipx
+which pipx >/dev/null 2>&1 || (echo "Installing pipx..." && python -m pip install --user pipx && python -m pipx ensurepath)
 
 #which virtualenv >/dev/null 2>&1 || sudo yum -y install virtualenv
 #which virtualenv >/dev/null 2>&1 || alias virtualenv=virtualenv.exe
-which virtualenv >/dev/null 2>&1 || (echo "Installing virtualenv..." && pip install virtualenv)
+which virtualenv >/dev/null 2>&1 || (echo "Installing virtualenv..." && (pipx install virtualenv || python -m pip install --user virtualenv))
 # Debian has its own required virtualenv :(
 sudo apt-get -y install python3-venv 2>/dev/null
 
