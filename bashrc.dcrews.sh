@@ -183,11 +183,13 @@ which yum 2>/dev/null && alias yum='sudo \yum -y'
 # Automagically alias all ~/bin/*.sh scripts
 if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh`=". ~/bin/`basename $f`"; done; fi;
 
+(which aws >/dev/null 2>&1 && [[ -r ~/.bashrc.aws ]]) && . ~/.bashrc.aws
 (which docker >/dev/null 2>&1 && [[ -r ~/.bashrc.docker ]]) && . ~/.bashrc.docker
 (which git >/dev/null 2>&1 && [[ -r ~/.bashrc.git ]]) && . ~/.bashrc.git
 (which kubectl >/dev/null 2>&1 && [[ -r ~/.bashrc.kubernetes ]]) && . ~/.bashrc.kubernetes
 (which mvn >/dev/null 2>&1 && [[ -r ~/.bashrc.maven ]]) && . ~/.bashrc.maven
 (which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
+(which terraform >/dev/null 2>&1 && [[ -r ~/.bashrc.terraform ]]) && . ~/.bashrc.terraform
 (which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
 [[ -d ~/.devcontainer ]] &&  . ~/.bashrc.devcontainer
 [[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
