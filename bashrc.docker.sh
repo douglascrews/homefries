@@ -5,11 +5,12 @@ alias d='docker '
 alias dc='docker-compose '
 alias dce='docker-compose exec '
 alias dcu='docker-compose up '
+alias dps='docker ps'
 alias docker_clean_orphans='docker rm $(docker ps -a -q -f status=exited)'
 alias docker_clean_images='docker rmi $(docker images --filter "dangling=true" -q --no-trunc)'
 alias docker_purge='docker system prune --force --volumes --all'
 drun() {
-	docker run -it --rm=true --name temp ${1:-busybox:latest} bash
+	docker run -it --rm=true --name temp $2 $3 $4 $5 $6 $7 $8 $9 ${1:-busybox:latest}
 }
 dbash() {
 	docker exec -it ${1:-busybox:latest} bash $2 $3 $4 $5 $6 $7 $8 $9

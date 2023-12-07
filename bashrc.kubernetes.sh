@@ -9,11 +9,11 @@ script_echo Kubernetes setup...
 #sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 # Docker/-compose/-machine
-alias k='kubectl'
+alias kc='kubectl'
 alias k8s_cluster='k3d cluster list --no-headers | cut --delimiter=" " --only-delimited -f 1'
 _k8s_use() {
 	# Use the Nth cluster in the cluster list by default for kubectl operations.
-	K8S_CLUSTER=$(k cluster list --no-headers | head -${1:-1} | tail -1 | cut --delimiter=" " --only-delimited -f 1)
+	K8S_CLUSTER=$(kubectl cluster list --no-headers | head -${1:-1} | tail -1 | cut --delimiter=" " --only-delimited -f 1)
 	echo Using ${K8S_CLUSTER}
 	k3d cluster get ${K8S_CLUSTER}
 	kubectl config use-context k3d-${K8S_CLUSTER}

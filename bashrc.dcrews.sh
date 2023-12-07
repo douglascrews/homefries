@@ -158,7 +158,24 @@ alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {}
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
 which dnf 2>/dev/null && alias dnf='sudo \dnf -y'
 alias flavor="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
-alias fuck='echodo sudo $(history -p \!\!)'
+#alias fuck='echodo sudo $(history -p \!\!)'
+fuck() {
+	if [[ -z "${1}" ]]; then
+		sudo $(history -p \!\!) # repeat last command with sudo
+	elif [[ "${1}" == "off" ]]; then
+		echo "Right, I'll be fucking right off now.";
+		sleep 1
+		echo "Fucking right off...";
+		sleep 2
+		echo "Yup, I'm fucking off now.";
+		sleep 3
+		exit
+	elif [[ "${1}" == "you" ]]; then
+		echo "Yeah, you're no picnic either, meatbag.";
+	else
+		echo "Look, I know you're frustrated, but there's no need to be rude.";
+	fi
+}
 alias functions='typeset -F'
 alias la='ls --almost-all'
 alias lal='ls --almost-all -l'
@@ -188,6 +205,7 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 (which git >/dev/null 2>&1 && [[ -r ~/.bashrc.git ]]) && . ~/.bashrc.git
 (which kubectl >/dev/null 2>&1 && [[ -r ~/.bashrc.kubernetes ]]) && . ~/.bashrc.kubernetes
 (which mvn >/dev/null 2>&1 && [[ -r ~/.bashrc.maven ]]) && . ~/.bashrc.maven
+(which mysql >/dev/null 2>&1 && [[ -r ~/.bashrc.mysql ]]) && . ~/.bashrc.mysql
 (which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
 (which terraform >/dev/null 2>&1 && [[ -r ~/.bashrc.terraform ]]) && . ~/.bashrc.terraform
 (which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
