@@ -1,4 +1,7 @@
 script_echo Terraform setup...
 
 alias tf=terraform
-alias tfy='terraform -auto-approve'
+tfy() {
+   terraform ${*} -auto-approve
+}
+

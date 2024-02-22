@@ -3,8 +3,10 @@ script_echo Git s[ucks]etup...
 # Install Git as needed
 git --version 2>/dev/null || sudo ${PACKAGE_MANAGER} -y install git
 
-export git_user=douglascrews
-export git_email=github@crewstopia.com
+#export git_user=douglascrews
+export git_user=douglascrews-partech
+#export git_email=github@crewstopia.com
+export git_email=douglas.crews@partech.com
 export git_home=github.com
 
 if [ ! -w ~/.gitconfig ]; then

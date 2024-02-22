@@ -85,6 +85,12 @@ whatis() {
 echodo() {
    echo $@ && eval $@
 }
+export -f echodo
+
+echodont() {
+   echo "(echodont): $@"
+}
+export -f echodont
 
 ff () {
    find . -name "$1" -print 2> /dev/null
@@ -176,6 +182,27 @@ fuck() {
 		echo "Look, I know you're frustrated, but there's no need to be rude.";
 	fi
 }
+
+# try...catch...die
+say() { echo "${@}" >&2; }
+die() {
+	say "ERROR executing: $*";
+	if [[ $(ps -T | wc -l) -gt 5 ]]; then
+		# We can exit the script without killing the bash console
+		exit 111;
+	else
+		# Do not exit the primary console
+		echo "Exited.";
+	fi;
+}
+catch() { "${@}" || die "ERROR: ${*}"; }
+try() { say "Attempting: ${*}" && catch "$@"; }
+
+sha256() {
+	# This uses the public key
+	echodo ssh-keygen -l -f ${1:-~/.ssh/dougcrews.pub}
+}
+
 alias functions='typeset -F'
 alias la='ls --almost-all'
 alias lal='ls --almost-all -l'
