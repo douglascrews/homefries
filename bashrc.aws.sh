@@ -3,6 +3,10 @@ script_echo AWS setup...
 alias awscli='aws --cli-auto-prompt'
 alias aws_profiles="grep '\[profile ' ~/.aws/config | sed 's/\[profile \(.*\)\]/\1/'"
 
+aws_sso_login() {
+	echodo aws --profile ${1:-service} sso login
+}
+
 aws_assume_role() {
 	# help
 	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] || [[ -z "${1}" ]] && { \

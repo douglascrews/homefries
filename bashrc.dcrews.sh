@@ -80,6 +80,18 @@ whatis() {
 #export -f _restore
 #which restore >/dev/null 2>&1 || alias restore=_restore
 
+# Toggle ".not" file extension
+not() {
+	for f in $(ls ${*}) ; do
+		mv ${f} ${f}.not 2>/dev/null && mv ${f}.not $(basename ${f}.not .not.not) 2>/dev/null; 
+	done;
+}
+
+# Echo message only if the VERBOSE system variable is set
+vecho() {
+	[ -n "${VERBOSE}" ] && echo ${@}
+}
+
 # ENVIRONMENT #
 
 echodo() {
@@ -96,12 +108,21 @@ ff () {
    find . -name "$1" -print 2> /dev/null
 }
 
+# Check that VPN connection is active; throw error if not
+vpn_required() {
+	local vpn_ip=172.27.243.1
+	local verbose=0;
+	set +x
+	(netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1) || (echo "VPN connection needed." && exit 1)
+	vecho "VPN connected."
+}
+
 _scp_home_to()
 {
    scp -r ~/. ${USER}@${1}:~/.
 }
 alias scp_home_to=_scp_home_to
-
+	
 # DELETE/UNDELETE #
 
 del() {
@@ -164,6 +185,7 @@ alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {}
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
 which dnf 2>/dev/null && alias dnf='sudo \dnf -y'
 alias flavor="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
+alias my_ip='dig ANY +short @resolver2.opendns.com myip.opendns.com'
 #alias fuck='echodo sudo $(history -p \!\!)'
 fuck() {
 	if [[ -z "${1}" ]]; then
