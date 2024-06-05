@@ -20,9 +20,11 @@ if [ ! -w ~/.gitconfig ]; then
 	git config --list
 fi
 
-eval $(ssh-agent -s) >/dev/null 2>&1
+${ECHODO} eval $(ssh-agent -s) >/dev/null 2>&1
 
-ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (eval $(ssh-agent) && ssh-add ~/.ssh/${git_user}@github.pem && ssh -T git@${git_home} >/dev/null))
+# ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/git@github.pem && ssh -T git@${git_home} >/dev/null))
+#ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa && ssh -T git@${git_home} >/dev/null))
+ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/id_ed25519 && ssh -T git@${git_home} >/dev/null))
 
 function git_branch_show
 {
@@ -30,5 +32,5 @@ function git_branch_show
 }
 #export PS1="[\[${colorCyan}\]\u@\h\[${colorReset}\] \[${colorYellow}\]\W\[${colorReset}\]\$(git_branch_show)]\$ "
 
-alias git_revert='git stash save && git stash clear && git submodule init && git submodule update && git clean -f -d -x && git reset --hard && git pull && git status'
-alias git_set_upstream='git branch --set-upstream-to=origin/$(git symbolic-ref --short HEAD)'
+alias git_revert='${ECHODO} git stash save && git stash clear && ${ECHODO} git submodule init && ${ECHODO} git submodule update && ${ECHODO} git clean -f -d -x && ${ECHODO} git reset --hard && git pull && git status'
+alias git_set_upstream='${ECHODO} git branch --set-upstream-to=origin/$(git symbolic-ref --short HEAD)'

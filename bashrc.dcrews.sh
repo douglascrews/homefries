@@ -35,6 +35,7 @@ whatis() {
    alias ${1} 2>/dev/null || type ${1} 2>/dev/null || which ${1}
 #   (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
 };
+export -f whatis
 #alias which=_which
 
 # Who owns this file?
@@ -82,8 +83,11 @@ whatis() {
 
 # Toggle ".not" file extension
 not() {
-	for f in $(ls ${*}) ; do
-		mv ${f} ${f}.not 2>/dev/null && mv ${f}.not $(basename ${f}.not .not.not) 2>/dev/null; 
+	for f in $(\ls ${*}) ; do
+		# Can not use basename because it strips the path
+		local bf=$(echo ${f} | sed -e "s/\.not//")
+		${ECHODO} mv ${f} ${f}.not 2>/dev/null;
+		${ECHODO} mv ${bf}.not.not ${bf} 2>/dev/null; 
 	done;
 }
 
@@ -94,6 +98,10 @@ vecho() {
 
 # ENVIRONMENT #
 
+# Useful for debugging:
+# export ECHODO=echodo
+# export ECHODO=echodont
+# export ECHODO=
 echodo() {
    echo $@ && eval $@
 }
@@ -104,25 +112,44 @@ echodont() {
 }
 export -f echodont
 
-ff () {
-   find . -name "$1" -print 2> /dev/null
+# Find File(s)
+ff() {
+   ${ECHODO} find . -name "$1" -print 2> /dev/null
+}
+
+# an unelevated version of "watch"
+repeat() {
+	while [ true ]; do
+	 	${ECHODO} ${*} || break;
+	done
 }
 
 # Check that VPN connection is active; throw error if not
 vpn_required() {
 	local vpn_ip=172.27.243.1
 	local verbose=0;
+	local -
 	set +x
 	(netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1) || (echo "VPN connection needed." && exit 1)
 	vecho "VPN connected."
 }
 
+# Check that root access is available; throw error if not
+root_required() {
+	if [[ "$(id -u)" -ne 0 ]]; then
+   	echo -e "Script must be run as root. Might I suggest some mild profanity?" >&2;
+   else
+   	${ECHODO} ${@};
+   fi
+}
+export -f root_required
+
 _scp_home_to()
 {
-   scp -r ~/. ${USER}@${1}:~/.
+   ${ECHODO} scp -r ~/. ${USER}@${1}:~/.
 }
 alias scp_home_to=_scp_home_to
-	
+
 # DELETE/UNDELETE #
 
 del() {
@@ -189,7 +216,7 @@ alias my_ip='dig ANY +short @resolver2.opendns.com myip.opendns.com'
 #alias fuck='echodo sudo $(history -p \!\!)'
 fuck() {
 	if [[ -z "${1}" ]]; then
-		sudo $(history -p \!\!) # repeat last command with sudo
+		${ECHODO} sudo $(history -p \!\! | sed -e 's/root_required //') # repeat last command with sudo, ignoring root_required function
 	elif [[ "${1}" == "off" ]]; then
 		echo "Right, I'll be fucking right off now.";
 		sleep 1
@@ -285,7 +312,10 @@ export -f salutation
 
 # Other options include  $(lsb_release -d 2>/dev/null | cut -f 2) $(cat /proc/version 2>/dev/null)
 HOSTOS="$(cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-)"
-script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} `uname -m`${colorReset} joint, `salutation`.
+script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} joint, $(salutation).
+
+# Display system info using neofetch if installed
+which neofetch >/dev/null 2>&1 && neofetch --title_fqdn on --package_managers on --os_arch on --speed_type current --speed_shorthand on --cpu_brand on --cpu_cores logical --cpu_speed on --cpu_temp C --distro_shorthand on --kernel_shorthand on --uptime_shorthand on --de_version on --shell_path on --shell_version on --disk_percent on --memory_percent on --underline on --bold on --color_blocks on
 
 # Display used/free disk space warning
 df --human-readable --local --print-type --exclude-type=tmpfs | grep -v Mount | grep '[9][0-9]%\|100%' | awk '{print $7" disk space free: "$5" ("$6" used)";}' | grep --color=auto '.*[9][0-9]%.*\|.*100%.*'
