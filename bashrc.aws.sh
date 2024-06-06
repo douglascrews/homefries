@@ -22,10 +22,10 @@ aws_profile_account() {
 
 aws_assume_role() {
 	# help
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] || [[ -z "${1}" ]] && { \
-		echo -e "${FUNCNAME}()"; \
-		echo -e "\n\t role_arn ARN for the Role to assume"; \
-		echo -e "\n\t [profile] AWS profile to assume (default \"service\")"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} role_arn [profile]"; \
+		echo -e "\t role_arn \tAWS role to assume"; \
+		echo -e "\t [profile] AWS profile to assume (default \"service\")"; \
 		return 0; \
 	}
 	local role_arn="$1";
@@ -49,28 +49,36 @@ aws_ecr_get_password() {
 }
 
 aws_eks_list_clusters() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws --profile ${1} eks list-clusters | jq ".clusters[]"
+	local JQ_QUERY='.clusters[]'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} eks list-clusters | jq "${JQ_QUERY}"
 }
+
 aws_eks_describe_cluster() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] || [[ -z ${2} ]] && { \
-		echo -e "${FUNCNAME}(aws_profile, cluster_name)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
-		echo -e "\n\t cluster_name Cluster name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile cluster_name [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t cluster_name \tCluster name"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws --profile ${1} eks describe-cluster --name ${2:-"ERROR_cluster-name_undefined"} | jq '.cluster | "name=\(.name) endpoint=\(.endpoint) cidr=\(.kubernetesNetworkConfig.serviceIpv4Cidr) status=\(.status)"'
+	local JQ_QUERY='.cluster | "name=\(.name) endpoint=\(.endpoint) cidr=\(.kubernetesNetworkConfig.serviceIpv4Cidr) status=\(.status)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} eks describe-cluster --name ${2:-"ERROR_cluster-name_undefined"} | jq "${JQ_QUERY}"
 }
+
 aws_eks_describe_clusters() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile"; \
+		echo -e "\t profile \tAWS profile to assume"; \
 		return 0; \
 	}
 	aws_sso_required
@@ -78,41 +86,50 @@ aws_eks_describe_clusters() {
 }
 
 aws_elasticache_list_clusters() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-   aws elasticache describe-cache-clusters --profile ${1} | jq -c -C -S -r '.CacheClusters[] | "
-id=\(.CacheClusterId) ARN=\(.ARN) engine=\(.Engine) \(.EngineVersion) size=\(.CacheNodeType)"'
+	local JQ_QUERY='.CacheClusters[] | "id=\(.CacheClusterId) ARN=\(.ARN) engine=\(.Engine) \(.EngineVersion) size=\(.CacheNodeType)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+   aws elasticache describe-cache-clusters --profile ${1} | jq -c -C -S -r "${JQ_QUERY}"
 }
 
 aws_elb_list_instances() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws --profile ${1} elb describe-load-balancers | jq ".LoadBalancerDescriptions[].LoadBalancerName"
+	local JQ_QUERY='.LoadBalancerDescriptions[].LoadBalancerName'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} elb describe-load-balancers | jq "${JQ_QUERY}"
 }
 
 aws_lambda_list_functions() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws --profile ${1} lambda list-functions | jq '.Functions[] | "\(.FunctionName) \(.Runtime) \(.Handler) \(.Version) \(.FunctionArn) \(.Role)"'
+	local JQ_QUERY='.Functions[] | "\(.FunctionName) \(.Runtime) \(.Handler) \(.Version) \(.FunctionArn) \(.Role)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} lambda list-functions | jq "${JQ_QUERY}"
 }
 
 aws_lambda_invoke_function() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] || [[ -z "${2}" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile, func_name)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
-		echo -e "\n\t func_name Function name to invoke"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile func_name [payload]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t func_name \tFunction name to invoke"; \
+		echo -e "\t [payload] \tFunction payload in JSON format"; \
 		return 0; \
 	}
 	aws_sso_required
@@ -121,72 +138,93 @@ aws_lambda_invoke_function() {
 	echo ${OUTPUT} | jq ".LogResult" | sed -e 's/"//g' | base64 --decode
 }
 
-
-aws_rds_list_instances() {
-	([[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]]) && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+aws_rds_describe_instances() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws rds describe-db-instances --profile ${1} | jq '.DBInstances[] | "\(.DBInstanceIdentifier) \(.DBInstanceClass) \(.Engine)\(.EngineVersion) \(.DBInstanceStatus) \(.Endpoint.Address):\(.Endpoint.Port)"'
+	local JQ_QUERY=''
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws rds describe-db-instances --profile ${1} | jq "${JQ_QUERY}"
 }
 
-aws_rds_list_instances_details() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+aws_rds_list_instances() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws rds describe-db-instances --profile ${1} | jq '.DBInstances[] | "\(.DBInstanceIdentifier) \(.DBInstanceClass) \(.Engine) \(.EngineVersion) \(.Endpoint.Address):\(.Endpoint.Port) \(.AvailabilityZone) \(.AllocatedStorage)GB"'
+	local JQ_QUERY='.DBInstances[] | "\(.DBInstanceArn) \(.DBInstanceClass) \(.Engine)\(.EngineVersion) \(.Endpoint.Address):\(.Endpoint.Port)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws rds describe-db-instances --profile ${1} | jq "${JQ_QUERY}"
 }
 
 aws_rds_describe_snapshots() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [snapshot_type] [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [snapshot_type] \tSnapshot type: automated,manual,shared,public,awsbackup; default ALL"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws rds describe-db-snapshots --profile ${1} | jq '.DBSnapshots[] | "\(.DBSnapshotIdentifier) \(.Engine) \(.EngineVersion) \(.Status) \(.SnapshotType) \(.SnapshotCreateTime)"'
+	[[ "${2}" == "automated" ]] || [[ "${2}" == "manual" ]] || [[ "${2}" == "shared" ]] || [[ "${2}" == "public" ]] || [[ "${2}" == "awsbackup" ]] && local SNAPSHOT_TYPE_PARAM=--snapshot-type && local SNAPSHOT_TYPE_VALUE=${2}
+	local JQ_QUERY='.DBSnapshots[] | "\(.DBSnapshotIdentifier) \(.Engine) \(.EngineVersion) \(.Status) \(.SnapshotType) \(.AvailabilityZone) \(.SnapshotCreateTime)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws rds describe-db-snapshots --profile ${1} ${SNAPSHOT_TYPE_PARAM} ${SNAPSHOT_TYPE_VALUE} | jq "${JQ_QUERY}"
 }
 
 aws_rds_list_snapshots() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [snapshot_type] [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [snapshot_type] \tSnapshot type: automated,manual,shared,public,awsbackup; default ALL"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws rds describe-db-snapshots --profile ${1} | jq ".DBSnapshots[].DBSnapshotIdentifier"
+	[[ "${2}" == "automated" ]] || [[ "${2}" == "manual" ]] || [[ "${2}" == "shared" ]] || [[ "${2}" == "public" ]] || [[ "${2}" == "awsbackup" ]] && local SNAPSHOT_TYPE_PARAM=--snapshot-type && local SNAPSHOT_TYPE_VALUE=${2}
+	local JQ_QUERY='.DBSnapshots[].DBSnapshotArn'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws rds describe-db-snapshots --profile ${1} ${SNAPSHOT_TYPE_PARAM} ${SNAPSHOT_TYPE_VALUE} | jq "${JQ_QUERY}"
 }
 
 aws_route53_list_hosted_zones() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws --profile ${1} route53 list-hosted-zones | jq ".HostedZones[].Name"
+	local JQ_QUERY='.HostedZones[].Name'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} route53 list-hosted-zones | jq "${JQ_QUERY}"
 }
 
 aws_vpc_list() {
 #	awsls --profiles ${1:-dougcrews} --attributes tags,cidr_block aws_vpc
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
 	aws_sso_required
-	aws ec2 describe-vpcs --profile ${1} | jq -r '.Vpcs[] | "id=\(.VpcId) cidr=\(.CidrBlock) owner=\(.OwnerId) default=\(.IsDefault)"'
+	local JQ_QUERY='.Vpcs[] | "id=\(.VpcId) cidr=\(.CidrBlock) owner=\(.OwnerId) default=\(.IsDefault)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws ec2 describe-vpcs --profile ${1} | jq -r "${JQ_QUERY}"
 }
 
 aws_all_list() {
-	[[ "${args[@]}" == "--help" ]] || [[ "${args[@]}" == "-h" ]] && { \
-		echo -e "${FUNCNAME}(aws_profile)"; \
-		echo -e "\n\t aws_profile AWS profile name"; \
+	[[ "${*}" =~ --help ]] || [[ "${#}" == 0 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
 		return 0; \
 	}
 	aws_sso_required
