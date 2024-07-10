@@ -91,6 +91,16 @@ not() {
 	done;
 }
 
+# Repeat the command until success is returned
+wait_for() {
+	retval=255
+	while [ $retval -eq 255 ]; do
+		sleep 1
+		echo -n .
+		$(${*}) >/dev/null 2>&1; retval=$?
+	done
+}
+
 # Echo message only if the VERBOSE system variable is set
 vecho() {
 	[ -n "${VERBOSE}" ] && echo ${@}
@@ -212,7 +222,7 @@ alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {}
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
 which dnf 2>/dev/null && alias dnf='sudo \dnf -y'
 alias flavor="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
-alias my_ip='dig ANY +short @resolver2.opendns.com myip.opendns.com'
+alias my_ip='curl -s https://checkip.amazonaws.com'
 #alias fuck='echodo sudo $(history -p \!\!)'
 fuck() {
 	if [[ -z "${1}" ]]; then
@@ -252,6 +262,19 @@ sha256() {
 	echodo ssh-keygen -l -f ${1:-~/.ssh/dougcrews.pub}
 }
 
+# Verify fingerprint of AWS (and others) SSH keys
+md5() {
+	# help
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
+		echo -e "${FUNCNAME} path/to/key.pem"; \
+		echo -e "\t path/to/key.pem \tPath to SSH key"; \
+		return 0; \
+	}
+	local key_file="$1";
+	[[ -z "${key_file}" ]] && { echo 'Key is required'; return 0; }
+	openssl rsa -in ${1} -pubout -outform DER | openssl md5 -c
+}
+
 alias functions='typeset -F'
 alias la='ls --almost-all'
 alias lal='ls --almost-all -l'
@@ -284,10 +307,18 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 (which mysql >/dev/null 2>&1 && [[ -r ~/.bashrc.mysql ]]) && . ~/.bashrc.mysql
 (which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
 (which terraform >/dev/null 2>&1 && [[ -r ~/.bashrc.terraform ]]) && . ~/.bashrc.terraform
+echo 1
 (which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
+echo 2
 [[ -d ~/.devcontainer ]] &&  . ~/.bashrc.devcontainer
+echo 3
+[[ -x ~/.bashrc.ssh ]] && . ~/.bashrc.ssh
+echo 4
+[[ -x ~/.bashrc.localhost ]] && . ~/.bashrc.localhost
+echo 5
 [[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 #echo DEBUG Finished calling sub-bashrc files
+echo 6
 
 salutation() {
    #local r=$(( 1+( $(od -An -N1 -i /dev/random) )%(5) ));
@@ -310,9 +341,14 @@ salutation() {
 }
 export -f salutation
 
-# Other options include  $(lsb_release -d 2>/dev/null | cut -f 2) $(cat /proc/version 2>/dev/null)
+# System information
 HOSTOS="$(cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-)"
 script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} joint, $(salutation).
+# Various ways to determine which distro you're running
+#cat /etc/*-release | grep PRETTY_NAME | cut -d '=' -f 2
+#lsb_release 2>/dev/null
+#cat /proc/version 2>/dev/null
+#hostnamectl 2>/dev/null
 
 # Display system info using neofetch if installed
 which neofetch >/dev/null 2>&1 && neofetch --title_fqdn on --package_managers on --os_arch on --speed_type current --speed_shorthand on --cpu_brand on --cpu_cores logical --cpu_speed on --cpu_temp C --distro_shorthand on --kernel_shorthand on --uptime_shorthand on --de_version on --shell_path on --shell_version on --disk_percent on --memory_percent on --underline on --bold on --color_blocks on
@@ -323,8 +359,6 @@ df --human-readable --local --print-type --exclude-type=tmpfs | grep "/$" | awk 
 # Display free RAM warning
 which free >/dev/null 2>&1 && (free -l | grep Mem | awk '{printf "RAM %2.1f%% used\n", $3*100/$2}' | grep --color=auto 'RAM [9][0-9]\.[0-9]% used\|RAM 100% used')
 which free >/dev/null 2>&1 && (free -m | grep Mem | awk '{printf "RAM %d MB / %d MB (%3.1f%%)\n", $3, $2, $3*100/$2}';)
-
-[[ -r ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 
 script_echo -n -e "
                         ${colorLightGreen}GREETINGS, MASTER.${colorReset}
