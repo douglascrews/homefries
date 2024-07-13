@@ -9,11 +9,11 @@ aws_sso_login() {
 
 aws_sso_account() {
 	export AWS_ACCOUNT=$(aws sts get-caller-identity --profile ${1:-service} --query "Account" 2> /dev/null);
-	echo ${AWS_ACCOUNT}
+	if [[ -z ${AWS_ACCOUNT} ]]; then return 1; else return 0; fi
 }
 
 aws_sso_required() {
-	([[ -n "$(aws_sso_account)" ]] || aws_sso_login) && aws_sso_account
+	($(aws_sso_account) || aws_sso_login) && aws_sso_account
 }
 
 aws_profile_account() {
@@ -48,6 +48,22 @@ aws_ecr_get_password() {
    aws --profile ${1:-service} ecr get-login-password
 }
 
+aws_cloudtrail_list_events() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
+		echo -e "${FUNCNAME} profile [age_in_hours] [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [age_in_hours] \tMaximum age of CloudTrail events in hours; default 24"
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
+		return 0; \
+	}
+	aws_sso_required
+	start_datetime=$(date -d "${2:-24} hour ago" --utc "+%Y-%m-%dT%H:%M:%SZ")
+	local JQ_QUERY='"\(.eventTime) \(.eventName) \(.eventType) \(.eventCategory) user=\(.userIdentity) params=\(.requestParameters)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	echo "Finding events since ${start_datetime}..."
+	aws --profile ${1} cloudtrail lookup-events --start-time ${start_datetime} | jq ".Events[] | .CloudTrailEvent" | sed -e 's/\\\"/\"/g;s/}\"/}/g;s/\"{/{/g;s/\\\\n//g;s/\\\\\"/\"/g' | jq  "${JQ_QUERY}"
+}
+
 aws_ec2_describe_security_groups() {
 	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
 		echo -e "${FUNCNAME} profile [--raw]"; \
@@ -58,7 +74,7 @@ aws_ec2_describe_security_groups() {
 	aws_sso_required
 	local JQ_QUERY='.SecurityGroups[] | "\(.GroupId) \(.GroupName) \(.Description)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} ec2 describe-security-groups | jq "${JQ_QUERY}"
+	aws --profile ${1} ec2 describe-security-groups | sed -e "$\\\"$\"$" | jq "${JQ_QUERY}"
 }
 
 aws_ec2_describe_instances() {
@@ -69,7 +85,7 @@ aws_ec2_describe_instances() {
 		return 0; \
 	}
 	aws_sso_required
-	local JQ_QUERY='.Reservations[].Instances[] | "\(.InstanceId) \(.Tags[] | select(.Key == "Name") | .Value) \(.InstanceType) \(.Placement.AvailabilityZone) \(.State.Name) key:\(.KeyName)"'
+	local JQ_QUERY='.Reservations[].Instances[] | "\(.InstanceId) \(select(.Tags != null) | .Tags[] | select(.Key == "Name").Value) \(.InstanceType) \(.Placement.AvailabilityZone) \(.State.Name) key:\(.KeyName)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} ec2 describe-instances | jq "${JQ_QUERY}"
 }

@@ -97,7 +97,7 @@ wait_for() {
 	while [ $retval -eq 255 ]; do
 		sleep 1
 		echo -n .
-		$(${*}) >/dev/null 2>&1; retval=$?
+		$(${*} >/dev/null 2>&1); retval=$?
 	done
 }
 
@@ -223,6 +223,17 @@ alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
 which dnf 2>/dev/null && alias dnf='sudo \dnf -y'
 alias flavor="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
 alias my_ip='curl -s https://checkip.amazonaws.com'
+
+# export aliases to scripts
+shopt -s expand_aliases
+
+# bash script debugging
+# COMMENT_START
+# (code to echo instead of executing)
+# #COMMENT_END
+# (requires shopt -s expand_aliases)
+alias COMMENT_START='[[ -n "${DEBUG}" ]] && cat <<"#COMMENT_END"'
+
 #alias fuck='echodo sudo $(history -p \!\!)'
 fuck() {
 	if [[ -z "${1}" ]]; then

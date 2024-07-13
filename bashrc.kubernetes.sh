@@ -19,7 +19,7 @@ script_echo Kubernetes setup...
 #  tar zxvf "${KREW}.tar.gz" &&
 #  ./"${KREW}" install krew
 #)
-[[ -d "${KREW_ROOT:-$HOME/.krew}/bin" ]] && (echo ${PATH} | grep "${KREW_ROOT:-$HOME/.krew}/bin" >/dev/null || export PATH="${PATH}:${KREW_ROOT:-$HOME/.krew}/bin")
+#[[ -d "${KREW_ROOT:-$HOME/.krew}/bin" ]] && (echo ${PATH} | grep "${KREW_ROOT:-$HOME/.krew}/bin" >/dev/null || export PATH="${PATH}:${KREW_ROOT:-$HOME/.krew}/bin")
 #kubectl krew
 #kubectl krew install ctx
 #kubectl krew install ns
