@@ -134,6 +134,31 @@ repeat() {
 	done
 }
 
+# Check VPN connection is active
+vpn_active() {
+	# help
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 0 ]] && { \
+		echo -e "${FUNCNAME} [-v]"; \
+		echo -e "\t -v \tVerbose yes or no"; \
+		return 0; \
+	}
+	local is_disconnected=1
+	local vpn_ip=172.27.243.1
+	local verbose=0;
+	local -
+	set +x
+	[[ "${*}" =~ -v ]] && verbose=1
+	netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1 && is_disconnected=0
+	if [[ "${verbose}" != "0" ]]; then
+		if [[ "${is_disconnected}" == "0" ]]; then
+			echo "yes"
+		else
+			echo "no"
+		fi
+	fi
+	return ${is_disconnected}
+}
+
 # Check that VPN connection is active; throw error if not
 vpn_required() {
 	local vpn_ip=172.27.243.1
@@ -304,9 +329,6 @@ alias shit='echodo $(history -p \!\!) | less'
 alias watch_that='echodo watch --beep --differences --interval 1 $(history -p \!\!)'
 which yum 2>/dev/null && alias yum='sudo \yum -y'
 
-# Enable Terraform cli tab autocomplete
-(which terraform > /dev/null 2>&1) && complete -C /usr/bin/terraform terraform
-
 # Automagically alias all ~/bin/*.sh scripts
 if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh`=". ~/bin/`basename $f`"; done; fi;
 
@@ -318,18 +340,12 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 (which mysql >/dev/null 2>&1 && [[ -r ~/.bashrc.mysql ]]) && . ~/.bashrc.mysql
 (which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
 (which terraform >/dev/null 2>&1 && [[ -r ~/.bashrc.terraform ]]) && . ~/.bashrc.terraform
-echo 1
 (which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
-echo 2
 [[ -d ~/.devcontainer ]] &&  . ~/.bashrc.devcontainer
-echo 3
 [[ -x ~/.bashrc.ssh ]] && . ~/.bashrc.ssh
-echo 4
 [[ -x ~/.bashrc.localhost ]] && . ~/.bashrc.localhost
-echo 5
 [[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 #echo DEBUG Finished calling sub-bashrc files
-echo 6
 
 salutation() {
    #local r=$(( 1+( $(od -An -N1 -i /dev/random) )%(5) ));

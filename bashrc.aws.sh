@@ -1,4 +1,4 @@
-script_echo AWS setup...
+echo AWS setup...
 
 alias awscli='aws --cli-auto-prompt'
 alias aws_profiles="grep '^\[profile ' ~/.aws/config | sed 's/\[profile \(.*\)\]/\1/'"
@@ -8,17 +8,47 @@ aws_sso_login() {
 }
 
 aws_sso_account() {
-	export AWS_ACCOUNT=$(aws sts get-caller-identity --profile ${1:-service} --query "Account" 2> /dev/null);
-	if [[ -z ${AWS_ACCOUNT} ]]; then return 1; else return 0; fi
+	# help
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 0 ]] && { \
+		echo -e "${FUNCNAME} [profile] [--quiet]"; \
+		echo -e "\t [profile] \tAWS profile; default=service"; \
+		echo -e "\t [--quiet] \tNo output, return 0 if found or 1 if not found"; \
+		return 0; \
+	}
+	export AWS_ACCOUNT=$(aws sts get-caller-identity --profile ${1:-service} --query "Account" | sed -e 's/"//g' 2>/dev/null);
+	if [[ ! "${*}" =~ --quiet ]]; then
+		echo ${AWS_ACCOUNT}
+	fi
+	if [[ -n "${AWS_ACCOUNT}" ]]; then
+		return 0;
+	else
+		return 1;
+	fi
 }
+export -f aws_sso_account
 
 aws_sso_required() {
-	($(aws_sso_account) || aws_sso_login) && aws_sso_account
+	# help
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 0 ]] && { \
+		echo -e "${FUNCNAME} [profile] [--quiet]"; \
+		echo -e "\t [profile] \tAWS profile; default=service"; \
+		echo -e "\t [--verbose] \tOutput current AWS account id"; \
+		return 0; \
+	}
+	(aws_sso_account ${1:-service} --quiet || aws_sso_login)
+	[[ "${*}" =~ --verbose ]] && aws_sso_account
+	if [[ -n "${AWS_ACCOUNT}" ]]; then
+		return 0;
+	else
+		return 1;
+	fi
 }
+export -f aws_sso_required
 
 aws_profile_account() {
-	aws --profile ${1:-${AWS_PROFILE:-dba}} ec2 describe-security-groups --query 'SecurityGroups[0].OwnerId' --output text
+	aws --profile ${1:-${AWS_PROFILE:-service}} ec2 describe-security-groups --query 'SecurityGroups[0].OwnerId' --output text
 }
+export -f aws_profile_account
 
 aws_assume_role() {
 	# help
@@ -38,6 +68,7 @@ aws_assume_role() {
 	export AWS_SESSION_TOKEN=$(echo $ROLE_CREDENTIALS | jq .Credentials.SessionToken | sed 's/"//g')
 	( [[ -n "${AWS_ACCESS_KEY_ID}" ]] && [[ -n "${AWS_SECRET_ACCESS_KEY}" ]] && [[ -n "${AWS_SESSION_TOKEN}" ]] && echo "Success!" ) || echo "Failed."
 }
+export -f aws_assume_role
 
 # Execute a command for all known AWS profiles; example: "aws_all aws_rds_list_instances"
 aws_all() {
@@ -47,6 +78,7 @@ aws_all() {
 aws_ecr_get_password() {
    aws --profile ${1:-service} ecr get-login-password
 }
+export -f aws_ecr_get_password
 
 aws_cloudtrail_list_events() {
 	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
@@ -56,7 +88,7 @@ aws_cloudtrail_list_events() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	start_datetime=$(date -d "${2:-24} hour ago" --utc "+%Y-%m-%dT%H:%M:%SZ")
 	local JQ_QUERY='"\(.eventTime) \(.eventName) \(.eventType) \(.eventCategory) user=\(.userIdentity) params=\(.requestParameters)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
@@ -71,7 +103,7 @@ aws_ec2_describe_security_groups() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.SecurityGroups[] | "\(.GroupId) \(.GroupName) \(.Description)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} ec2 describe-security-groups | sed -e "$\\\"$\"$" | jq "${JQ_QUERY}"
@@ -84,7 +116,7 @@ aws_ec2_describe_instances() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Reservations[].Instances[] | "\(.InstanceId) \(select(.Tags != null) | .Tags[] | select(.Key == "Name").Value) \(.InstanceType) \(.Placement.AvailabilityZone) \(.State.Name) key:\(.KeyName)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} ec2 describe-instances | jq "${JQ_QUERY}"
@@ -97,10 +129,10 @@ aws_ec2_list_instances() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Reservations[].Instances[].InstanceId'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} ec2 describe-instances | jq "${JQ_QUERY}"
+	aws --profile ${1} ec2 describe-instances | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_ec2_list_security_groups() {
@@ -110,10 +142,10 @@ aws_ec2_list_security_groups() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.SecurityGroups[].GroupId'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} ec2 describe-security-groups | jq "${JQ_QUERY}"
+	aws --profile ${1} ec2 describe-security-groups | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_ec2_list_security_group_rules() {
@@ -123,11 +155,17 @@ aws_ec2_list_security_group_rules() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.SecurityGroupRules[] | "\(.GroupId) \(.SecurityGroupRuleId) egress:\(.IsEgress) \(.CidrIpv4):\(.FromPort)~\(.ToPort)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} ec2 describe-security-group-rules | jq "${JQ_QUERY}"
+	aws --profile ${1} ec2 describe-security-group-rules | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
+
+aws_ecr_docker_login() {
+	aws_sso_required;
+	aws_ecr_get_password | docker login --username AWS --password-stdin ${1:-060724984176.dkr.ecr.us-east-1.amazonaws.com}
+}
+export -f aws_ecr_docker_login
 
 aws_eks_list_clusters() {
 	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
@@ -136,10 +174,10 @@ aws_eks_list_clusters() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.clusters[]'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} eks list-clusters | jq "${JQ_QUERY}"
+	aws --profile ${1} eks list-clusters | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_eks_describe_cluster() {
@@ -150,7 +188,7 @@ aws_eks_describe_cluster() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.cluster | "name=\(.name) endpoint=\(.endpoint) cidr=\(.kubernetesNetworkConfig.serviceIpv4Cidr) status=\(.status)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} eks describe-cluster --name ${2:-"ERROR_cluster-name_undefined"} | jq "${JQ_QUERY}"
@@ -162,7 +200,7 @@ aws_eks_describe_clusters() {
 		echo -e "\t profile \tAWS profile to assume"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	for kluster in $(aws_eks_list_clusters ${1}); do echodo aws_eks_describe_cluster $kluster; done
 }
 
@@ -173,7 +211,7 @@ aws_elasticache_list_clusters() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.CacheClusters[] | "id=\(.CacheClusterId) ARN=\(.ARN) engine=\(.Engine) \(.EngineVersion) size=\(.CacheNodeType)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
    aws elasticache describe-cache-clusters --profile ${1} | jq -c -C -S -r "${JQ_QUERY}"
@@ -186,10 +224,10 @@ aws_elb_list_instances() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.LoadBalancerDescriptions[].LoadBalancerName'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} elb describe-load-balancers | jq "${JQ_QUERY}"
+	aws --profile ${1} elb describe-load-balancers | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_iam_describe_role() {
@@ -200,7 +238,7 @@ aws_iam_describe_role() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Role'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} iam get-role --role-name ${2} | jq "${JQ_QUERY}"
@@ -215,7 +253,7 @@ aws_iam_describe_role_policy() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} iam get-role-policy --role-name ${2} --policy-name ${3} | jq "${JQ_QUERY}"
@@ -229,10 +267,10 @@ aws_iam_list_role_policies_attached() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.AttachedPolicies[].PolicyArn'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} iam list-attached-role-policies --role-name ${2} | jq "${JQ_QUERY}"
+	aws --profile ${1} iam list-attached-role-policies --role-name ${2} | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_iam_list_roles() {
@@ -242,10 +280,10 @@ aws_iam_list_roles() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Roles[].Arn'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} iam list-roles | jq "${JQ_QUERY}"
+	aws --profile ${1} iam list-roles | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_iam_list_role_policies() {
@@ -256,10 +294,10 @@ aws_iam_list_role_policies() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.PolicyNames[]'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} iam list-role-policies --role-name ${2} | jq "${JQ_QUERY}"
+	aws --profile ${1} iam list-role-policies --role-name ${2} | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_iam_list_user_policies() {
@@ -270,10 +308,10 @@ aws_iam_list_user_policies() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.AttachedPolicies[].PolicyArn'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} iam list-attached-user-policies --user-name ${2} | jq "${JQ_QUERY}"
+	aws --profile ${1} iam list-attached-user-policies --user-name ${2} | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_kms_describe_key() {
@@ -284,7 +322,7 @@ aws_kms_describe_key() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Keys[].KeyArn'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} kms describe-key --key-id ${2} | jq "${JQ_QUERY}"	
@@ -297,10 +335,10 @@ aws_kms_list_keys() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Keys[].KeyArn'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} kms list-keys | jq "${JQ_QUERY}"	
+	aws --profile ${1} kms list-keys | jq "${JQ_QUERY}" | sed -e 's/"//g'	
 }
 
 aws_lambda_describe_functions() {
@@ -310,7 +348,7 @@ aws_lambda_describe_functions() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Functions[] | "\(.FunctionName) \(.Runtime) \(.Handler) \(.Version) CodeSize: \(.CodeSize) Role: \(.Role) \(.Description)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws --profile ${1} lambda list-functions | jq "${JQ_QUERY}"
@@ -323,10 +361,10 @@ aws_lambda_list_functions() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Functions[].FunctionArn'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} lambda list-functions | jq "${JQ_QUERY}"
+	aws --profile ${1} lambda list-functions | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_lambda_invoke_function() {
@@ -337,7 +375,7 @@ aws_lambda_invoke_function() {
 		echo -e "\t [payload] \tFunction payload in JSON format"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local OUTPUT=$(aws --profile ${1} lambda invoke --function-name ${2} --log-type Tail -)
 	echo ${OUTPUT} | jq ".StatusCode"
 	echo ${OUTPUT} | jq ".LogResult" | sed -e 's/"//g' | base64 --decode
@@ -351,7 +389,7 @@ aws_rds_describe_instance() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.DBInstances[] | "\(.DBInstanceArn) \(.DBInstanceClass) \(.Engine)\(.EngineVersion) \(.Endpoint.Address):\(.Endpoint.Port)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws rds describe-db-instances --profile ${1} --db-instance-identifier ${2} | jq "${JQ_QUERY}"
@@ -364,7 +402,7 @@ aws_rds_describe_instances() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.DBInstances[] | "\(.DBInstanceArn) \(.DBInstanceClass) \(.Engine)\(.EngineVersion) \(.Endpoint.Address):\(.Endpoint.Port)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws rds describe-db-instances --profile ${1} | jq "${JQ_QUERY}"
@@ -377,10 +415,10 @@ aws_rds_list_instances() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.DBInstances[] | "\(.DBInstanceArn)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws rds describe-db-instances --profile ${1} | jq "${JQ_QUERY}"
+	aws rds describe-db-instances --profile ${1} | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_rds_describe_snapshots() {
@@ -391,7 +429,7 @@ aws_rds_describe_snapshots() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	[[ "${2}" == "automated" ]] || [[ "${2}" == "manual" ]] || [[ "${2}" == "shared" ]] || [[ "${2}" == "public" ]] || [[ "${2}" == "awsbackup" ]] && local SNAPSHOT_TYPE_PARAM=--snapshot-type && local SNAPSHOT_TYPE_VALUE=${2}
 	local JQ_QUERY='.DBSnapshots[] | "\(.DBSnapshotIdentifier) \(.Engine) \(.EngineVersion) \(.Status) \(.SnapshotType) \(.AvailabilityZone) \(.SnapshotCreateTime)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
@@ -406,11 +444,11 @@ aws_rds_list_snapshots() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	[[ "${2}" == "automated" ]] || [[ "${2}" == "manual" ]] || [[ "${2}" == "shared" ]] || [[ "${2}" == "public" ]] || [[ "${2}" == "awsbackup" ]] && local SNAPSHOT_TYPE_PARAM=--snapshot-type && local SNAPSHOT_TYPE_VALUE=${2}
 	local JQ_QUERY='.DBSnapshots[] | "\(.DBSnapshotArn) \(.SnapshotType)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws rds describe-db-snapshots --profile ${1} ${SNAPSHOT_TYPE_PARAM} ${SNAPSHOT_TYPE_VALUE} | jq "${JQ_QUERY}"
+	aws rds describe-db-snapshots --profile ${1} ${SNAPSHOT_TYPE_PARAM} ${SNAPSHOT_TYPE_VALUE} | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_route53_list_hosted_zones() {
@@ -420,10 +458,101 @@ aws_route53_list_hosted_zones() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.HostedZones[].Name'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
-	aws --profile ${1} route53 list-hosted-zones | jq "${JQ_QUERY}"
+	aws --profile ${1} route53 list-hosted-zones | jq "${JQ_QUERY}" | sed -e 's/"//g'
+}
+
+aws_secrets_get_secret() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 2 ]] && { \
+		echo -e "${FUNCNAME} profile secret_id [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t secret_id \Secret ID"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
+		return 0; \
+	}
+	aws_sso_required;
+	local JQ_QUERY='.SecretString'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} secretsmanager get-secret-value --secret-id ${2} | jq "${JQ_QUERY}" | sed -e 's/"//g'
+}
+export -f aws_secrets_get_secret
+
+aws_secrets_list_secrets() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
+		return 0; \
+	}
+	aws_sso_required;
+	local JQ_QUERY='.SecretList[] | "\(.Name) \(.Description) \(.ARN)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} secretsmanager list-secrets | jq "${JQ_QUERY}" | sed -e 's/"//g'
+}
+
+aws_transfer_describe_server() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 2 ]] && { \
+		echo -e "${FUNCNAME} profile server_id [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t server_id \tAWS Transfer Family server ID"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
+		return 0; \
+	}
+	aws_sso_required;
+	local JQ_QUERY='.Server | "\(.Arn) \(.State) \(.Domain) \(.EndpointType) \(.Protocols[])"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} transfer describe-server --server-id ${2} | jq "${JQ_QUERY}"
+}
+
+aws_transfer_list_endpoints() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
+		echo -e "${FUNCNAME} profile [--with-users]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--with-users] \tList users for each server"; \
+		return 0; \
+	}
+	aws_sso_required;
+	for f in $(aws --profile ${1} transfer list-servers | jq '.Servers[] | .Arn' | sed 's/"//g') ; do
+		# arn:aws:transfer:us-east-1:232720106935:server/s-feee11aa804c44cd8 -> s-feee11aa804c44cd8.server.transfer.us-east-1.amazonaws.com
+		server_id=$(echo ${f} | cut -d':' -f 6 | cut -d'/' -f 2);
+		aws_region=$(echo ${f} | cut -d':' -f 4);
+		endpoint=${server_id}.server.transfer.${aws_region}.amazonaws.com;
+		echo ${endpoint};
+		if [[ "${*}" =~ --with-users ]]; then
+			for u in $(aws --profile ${1} transfer list-users --server-id ${server_id} | jq '.Users[] | .UserName' | sed 's/"//g') ; do
+				echo -e "\t${u}";
+			done;
+		fi;
+	done;
+}
+
+aws_transfer_list_servers() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
+		echo -e "${FUNCNAME} profile [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
+		return 0; \
+	}
+	aws_sso_required;
+	local JQ_QUERY='.Servers[] | "\(.Arn) \(.State) \(.Domain) \(.EndpointType) \(.EntityProviderType)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} transfer list-servers | jq "${JQ_QUERY}" | sed -e 's/"//g'
+}
+
+aws_transfer_list_users() {
+	[[ "${*}" =~ --help ]] || [[ "${#}" < 2 ]] && { \
+		echo -e "${FUNCNAME} profile server_id [--raw]"; \
+		echo -e "\t profile \tAWS profile to assume"; \
+		echo -e "\t server_id \tAWS Transfer Family server ID"; \
+		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
+		return 0; \
+	}
+	aws_sso_required;
+	local JQ_QUERY='.Users[] | "\(.Arn) \(.Role) \(.HomeDirectoryType) keys=\(.SshPublicKeyCount)"'
+	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
+	aws --profile ${1} transfer list-users --server-id ${2} | jq "${JQ_QUERY}" | sed -e 's/"//g'
 }
 
 aws_vpc_list() {
@@ -434,7 +563,7 @@ aws_vpc_list() {
 		echo -e "\t [--raw] \tRaw output from AWS CLI"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	local JQ_QUERY='.Vpcs[] | "id=\(.VpcId) cidr=\(.CidrBlock) owner=\(.OwnerId) default=\(.IsDefault)"'
 	[[ "${*}" =~ --raw ]] && JQ_QUERY='.'
 	aws ec2 describe-vpcs --profile ${1} | jq -r "${JQ_QUERY}"
@@ -446,6 +575,6 @@ aws_all_list() {
 		echo -e "\t profile \tAWS profile to assume"; \
 		return 0; \
 	}
-	aws_sso_required
+	aws_sso_required;
 	${ECHODO} awsls --profiles ${1} --attributes tags,cidr_block aws_*
 }
