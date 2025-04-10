@@ -12,3 +12,5 @@ _deps
 *.bak
 *.not
 *.dcrews
+.svn
+/bashrc.partech.sh
