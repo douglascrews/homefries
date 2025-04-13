@@ -97,9 +97,10 @@ not() {
 function yesno() {
    # help
    [[ "${*}" =~ --help ]] || [[ "${#}" -ne 1 ]] && {
-      echo -e "Evaluates the test and returns a binary answer. Isn't that refreshing?"
-      echo -e "${FUNCNAME} \"${@}\""
-      echo -e "\t (Be sure to wrap your command in doublequotes so that only one parameter is passed to me)"
+      echo -e "Evaluates the test and returns a "yes" or "no" answer. Isn't that refreshing?"
+      echo -e "${FUNCNAME} '${@:-"(command1 param param | command2 param) || command3 ..."}'"
+      echo -e "This WILL execute the commands -- beware of side effects!"
+      echo -e "\t (Be sure to wrap your entire command in singlequotes so that only one parameter is passed to me)"
       return 0
    }
    eval "${@}" >/dev/null 2>&1
@@ -350,6 +351,7 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 (which aws >/dev/null 2>&1 && [[ -r ~/.bashrc.aws ]]) && . ~/.bashrc.aws
 (which docker >/dev/null 2>&1 && [[ -r ~/.bashrc.docker ]]) && . ~/.bashrc.docker
 (which git >/dev/null 2>&1 && [[ -r ~/.bashrc.git ]]) && . ~/.bashrc.git
+[[ -d /usr/local/go/bin ]] && . ~/.bashrc.golang
 (which kubectl >/dev/null 2>&1 && [[ -r ~/.bashrc.kubernetes ]]) && . ~/.bashrc.kubernetes
 (which mvn >/dev/null 2>&1 && [[ -r ~/.bashrc.maven ]]) && . ~/.bashrc.maven
 (which mysql >/dev/null 2>&1 && [[ -r ~/.bashrc.mysql ]]) && . ~/.bashrc.mysql
