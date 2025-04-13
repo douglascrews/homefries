@@ -13,7 +13,7 @@ echo Setting up local environment...
 
 # Reference implementation, overridden in .bashrc.git
 function git_branch_show { 
-	echo ""
+   echo ""
 }
 
 # Enable bash completion for Maven
@@ -83,27 +83,48 @@ export -f whatis
 
 # Toggle ".not" file extension
 not() {
-	for f in $(\ls ${*}) ; do
-		# Can not use basename because it strips the path
-		local bf=$(echo ${f} | sed -e "s/\.not//")
-		${ECHODO} mv ${f} ${f}.not 2>/dev/null;
-		${ECHODO} mv ${bf}.not.not ${bf} 2>/dev/null; 
-	done;
+   for f in $(\ls ${*}) ; do
+      # Can not use basename because it strips the path
+      local bf=$(echo ${f} | sed -e "s/\.not//")
+      ${ECHODO} mv ${f} ${f}.not 2>/dev/null;
+      ${ECHODO} mv ${bf}.not.not ${bf} 2>/dev/null; 
+   done;
 }
+
+# Quick test whether the command succeeds or not
+# example: yesno "[ -d ~/.aws ]"
+# counterexample: yesno find ~ -name .aws DOES NOT WORK because find returns code 0 even if it finds nothing
+function yesno() {
+   # help
+   [[ "${*}" =~ --help ]] || [[ "${#}" -ne 1 ]] && {
+      echo -e "Evaluates the test and returns a binary answer. Isn't that refreshing?"
+      echo -e "${FUNCNAME} \"${@}\""
+      echo -e "\t (Be sure to wrap your command in doublequotes so that only one parameter is passed to me)"
+      return 0
+   }
+   eval "${@}" >/dev/null 2>&1
+   local RETVAL=$?
+   if [[ 0 -eq ${RETVAL} ]]; then
+      echo "yes"
+   else
+      echo "no"
+   fi
+}
+export -f yesno
 
 # Repeat the command until success is returned
 wait_for() {
-	retval=255
-	while [ $retval -eq 255 ]; do
-		sleep 1
-		echo -n .
-		$(${*} >/dev/null 2>&1); retval=$?
-	done
+   retval=255
+   while [ $retval -eq 255 ]; do
+      sleep 1
+      echo -n .
+      $(${*} >/dev/null 2>&1); retval=$?
+   done
 }
 
 # Echo message only if the VERBOSE system variable is set
 vecho() {
-	[ -n "${VERBOSE}" ] && echo ${@}
+   [ -n "${VERBOSE}" ] && echo ${@}
 }
 
 # ENVIRONMENT #
@@ -129,61 +150,55 @@ ff() {
 
 # an unelevated version of "watch"
 repeat() {
-	while [ true ]; do
-	 	${ECHODO} ${*} || break;
-	done
+   while [ true ]; do
+      ${ECHODO} ${*} || break;
+   done
 }
 
 # Check VPN connection is active
 vpn_active() {
-	# help
-	[[ "${*}" =~ --help ]] || [[ "${#}" < 0 ]] && { \
-		echo -e "${FUNCNAME} [-v]"; \
-		echo -e "\t -v \tVerbose yes or no"; \
-		return 0; \
-	}
-	local is_disconnected=1
-	local vpn_ip=172.27.243.1
-	local verbose=0;
-	local -
-	set +x
-	[[ "${*}" =~ -v ]] && verbose=1
-	netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1 && is_disconnected=0
-	if [[ "${verbose}" != "0" ]]; then
-		if [[ "${is_disconnected}" == "0" ]]; then
-			echo "yes"
-		else
-			echo "no"
-		fi
-	fi
-	return ${is_disconnected}
+   # help
+   [[ "${*}" =~ --help ]] || [[ "${#}" < 0 ]] && { \
+      echo -e "${FUNCNAME} [-v]"; \
+      echo -e "\t -v \tVerbose yes or no"; \
+      return 0; \
+   }
+   local is_disconnected=1
+   local vpn_ip=172.27.243.1
+   local verbose=0;
+   local -
+   set +x
+   [[ "${*}" =~ -v ]] && verbose=1
+   netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1 && is_disconnected=0
+   if [[ "${verbose}" != "0" ]]; then
+      if [[ "${is_disconnected}" == "0" ]]; then
+         echo "yes"
+      else
+         echo "no"
+      fi
+   fi
+   return ${is_disconnected}
 }
 
 # Check that VPN connection is active; throw error if not
 vpn_required() {
-	local vpn_ip=172.27.243.1
-	local verbose=0;
-	local -
-	set +x
-	(netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1) || (echo "VPN connection needed." && exit 1)
-	vecho "VPN connected."
+   local vpn_ip=172.27.243.1
+   local verbose=0;
+   local -
+   set +x
+   (netsh.exe interface ip show route | grep ${vpn_ip} >/dev/null 2>&1) || (echo "VPN connection needed." && exit 1)
+   vecho "VPN connected."
 }
 
 # Check that root access is available; throw error if not
 root_required() {
-	if [[ "$(id -u)" -ne 0 ]]; then
-   	echo -e "Script must be run as root. Might I suggest some mild profanity?" >&2;
+   if [[ "$(id -u)" -ne 0 ]]; then
+      echo -e "Script must be run as root. Might I suggest some mild profanity?" >&2;
    else
-   	${ECHODO} ${@};
+      ${ECHODO} ${@};
    fi
 }
 export -f root_required
-
-_scp_home_to()
-{
-   ${ECHODO} scp -r ~/. ${USER}@${1}:~/.
-}
-alias scp_home_to=_scp_home_to
 
 # DELETE/UNDELETE #
 
@@ -261,54 +276,54 @@ alias COMMENT_START='[[ -n "${DEBUG}" ]] && cat <<"#COMMENT_END"'
 
 #alias fuck='echodo sudo $(history -p \!\!)'
 fuck() {
-	if [[ -z "${1}" ]]; then
-		${ECHODO} sudo $(history -p \!\! | sed -e 's/root_required //') # repeat last command with sudo, ignoring root_required function
-	elif [[ "${1}" == "off" ]]; then
-		echo "Right, I'll be fucking right off now.";
-		sleep 1
-		echo "Fucking right off...";
-		sleep 2
-		echo "Yup, I'm fucking off now.";
-		sleep 3
-		exit
-	elif [[ "${1}" == "you" ]]; then
-		echo "Yeah, you're no picnic either, meatbag.";
-	else
-		echo "Look, I know you're frustrated, but there's no need to be rude.";
-	fi
+   if [[ -z "${1}" ]]; then
+      ${ECHODO} sudo $(history -p \!\! | sed -e 's/root_required //') # repeat last command with sudo, ignoring root_required function
+   elif [[ "${1}" == "off" ]]; then
+      echo "Right, I'll be fucking right off now.";
+      sleep 1
+      echo "Fucking right off...";
+      sleep 2
+      echo "Yup, I'm fucking off now.";
+      sleep 3
+      exit
+   elif [[ "${1}" == "you" ]]; then
+      echo "Yeah, you're no picnic either, meatbag.";
+   else
+      echo "Look, I know you're frustrated, but there's no need to be rude.";
+   fi
 }
 
 # try...catch...die
 say() { echo "${@}" >&2; }
 die() {
-	say "ERROR executing: $*";
-	if [[ $(ps -T | wc -l) -gt 5 ]]; then
-		# We can exit the script without killing the bash console
-		exit 111;
-	else
-		# Do not exit the primary console
-		echo "Exited.";
-	fi;
+   say "ERROR executing: $*";
+   if [[ $(ps -T | wc -l) -gt 5 ]]; then
+      # We can exit the script without killing the bash console
+      exit 111;
+   else
+      # Do not exit the primary console
+      echo "Exited.";
+   fi;
 }
 catch() { "${@}" || die "ERROR: ${*}"; }
 try() { say "Attempting: ${*}" && catch "$@"; }
 
 sha256() {
-	# This uses the public key
-	echodo ssh-keygen -l -f ${1:-~/.ssh/dougcrews.pub}
+   # This uses the public key
+   echodo ssh-keygen -l -f ${1:-~/.ssh/dougcrews.pub}
 }
 
 # Verify fingerprint of AWS (and others) SSH keys
 md5() {
-	# help
-	[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
-		echo -e "${FUNCNAME} path/to/key.pem"; \
-		echo -e "\t path/to/key.pem \tPath to SSH key"; \
-		return 0; \
-	}
-	local key_file="$1";
-	[[ -z "${key_file}" ]] && { echo 'Key is required'; return 0; }
-	openssl rsa -in ${1} -pubout -outform DER | openssl md5 -c
+   # help
+   [[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
+      echo -e "${FUNCNAME} path/to/key.pem"; \
+      echo -e "\t path/to/key.pem \tPath to SSH key"; \
+      return 0; \
+   }
+   local key_file="$1";
+   [[ -z "${key_file}" ]] && { echo 'Key is required'; return 0; }
+   openssl rsa -in ${1} -pubout -outform DER | openssl md5 -c
 }
 
 alias functions='typeset -F'
