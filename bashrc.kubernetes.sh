@@ -1,4 +1,4 @@
-script_echo Kubernetes setup...
+script_echo "Kubernetes setup..."
 
 # Install Minikube
 #curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
@@ -27,11 +27,18 @@ script_echo Kubernetes setup...
 # Docker/-compose/-machine
 alias kc='kubectl'
 alias k8s_cluster='k3d cluster list --no-headers | cut --delimiter=" " --only-delimited -f 1'
-_k8s_use() {
-	# Use the Nth cluster in the cluster list by default for kubectl operations.
-	K8S_CLUSTER=$(kubectl cluster list --no-headers | head -${1:-1} | tail -1 | cut --delimiter=" " --only-delimited -f 1)
-	echo Using ${K8S_CLUSTER}
-	${ECHODO} k3d cluster get ${K8S_CLUSTER}
-	${ECHODO} kubectl config use-context k3d-${K8S_CLUSTER}
+function k8s_use() {
+   [[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && {
+      help_note 'Use the Nth cluster in the cluster list by default for kubectl operations.'
+      help_headline ${FUNCNAME} 'cluster_ordinal'
+      help_param 'cluster_ordinal' 'Which cluster in the list to use when not specified' '1'
+      return 0;
+   }
+   K8S_CLUSTER=$(kubectl cluster list --no-headers | head -${1:-1} | tail -1 | cut --delimiter=" " --only-delimited -f 1)
+   echo Using ${K8S_CLUSTER}
+   ${ECHODO} k3d cluster get ${K8S_CLUSTER}
+   ${ECHODO} kubectl config use-context k3d-${K8S_CLUSTER}
 }
-alias k8s_use=_k8s_use
+export -f k8s_use
+
+kubectl version --short

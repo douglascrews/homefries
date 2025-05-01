@@ -1,7 +1,7 @@
-echo Executing ~/.bashrc.devcontainer...
+script_echo "Dev Container setup..."
 
 if [ -x ./.devcontainer/initializeCommand.sh ]; then
-	. ./.devcontainer/initializeCommand.sh
+   . ./.devcontainer/initializeCommand.sh
 fi
 
 echo Executing /usr/local/share/docker-init.sh...
@@ -51,7 +51,7 @@ sudo apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 export WORKSPACE=${PWD}
 if [ -x ./.devcontainer/postCreateCommand.sh ]; then
-	. ./.devcontainer/postCreateCommand.sh
+   . ./.devcontainer/postCreateCommand.sh
 fi
 
 export git_home=github.com
@@ -61,9 +61,9 @@ ssh -T git@${git_home}
 git submodule update --init --remote --recursive
 
 if [ -x  ]; then
-	source ./venv/bin/activate &>/dev/null
+   source ./venv/bin/activate &>/dev/null
 elif [ -x ./common-scripts/scripts/mkvenv.sh ]; then
-	source ./common-scripts/scripts/mkvenv.sh
+   source ./common-scripts/scripts/mkvenv.sh
 fi
 
 echo Completed ~/.bashrc.devcontainer.

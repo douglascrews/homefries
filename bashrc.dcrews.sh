@@ -327,6 +327,7 @@ md5() {
    openssl rsa -in ${1} -pubout -outform DER | openssl md5 -c
 }
 
+which dpkg >/dev/null 2>&1 && alias deb_install='${ECHODO} sudo dpkg -i'
 alias functions='typeset -F'
 alias la='ls --almost-all'
 alias lal='ls --almost-all -l'
@@ -340,6 +341,7 @@ alias popd='\popd >/dev/null'
 alias pushd='\pushd >/dev/null'
 which free >/dev/null 2>&1 && alias ram='free -m | grep Mem | awk "{printf \"%d MB / \%d MB (\%3.1f%\%)\n\", \$3, \$2, \$3*100/\$2}" 2>/dev/null'
 alias rm='\rm --interactive'
+which rpm >/dev/null 2>&1 && alias rpm_install='${ECHODO} sudo rpm -ivh' && alias rpm_update='${ECHODO} sudo rpm -Uvh'
 alias script_echo='[[ -n "${SSH_TTY:-$(tty)}" ]] && echo' # only echo if in interactive session
 alias shit='echodo $(history -p \!\!) | less'
 alias watch_that='echodo watch --beep --differences --interval 1 $(history -p \!\!)'
@@ -348,18 +350,19 @@ which yum 2>/dev/null && alias yum='sudo \yum -y'
 # Automagically alias all ~/bin/*.sh scripts
 if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh`=". ~/bin/`basename $f`"; done; fi;
 
-(which aws >/dev/null 2>&1 && [[ -r ~/.bashrc.aws ]]) && . ~/.bashrc.aws
-(which docker >/dev/null 2>&1 && [[ -r ~/.bashrc.docker ]]) && . ~/.bashrc.docker
-(which git >/dev/null 2>&1 && [[ -r ~/.bashrc.git ]]) && . ~/.bashrc.git
-[[ -d /usr/local/go/bin ]] && . ~/.bashrc.golang
-(which kubectl >/dev/null 2>&1 && [[ -r ~/.bashrc.kubernetes ]]) && . ~/.bashrc.kubernetes
-(which mvn >/dev/null 2>&1 && [[ -r ~/.bashrc.maven ]]) && . ~/.bashrc.maven
-(which mysql >/dev/null 2>&1 && [[ -r ~/.bashrc.mysql ]]) && . ~/.bashrc.mysql
-(which python >/dev/null 2>&1 && [[ -r ~/.bashrc.python ]]) && . ~/.bashrc.python
-(which terraform >/dev/null 2>&1 && [[ -r ~/.bashrc.terraform ]]) && . ~/.bashrc.terraform
-(which vault >/dev/null 2>&1 && [[ -r ~/.bashrc.vault ]]) && . ~/.bashrc.vault
-[[ -d ~/.devcontainer ]] &&  . ~/.bashrc.devcontainer
+[[ -x ~/.bashrc.aws ]] && . ~/.bashrc.aws
+[[ -x ~/.bashrc.devcontainer ]] && . ~/.bashrc.devcontainer
+[[ -x ~/.bashrc.docker ]] && . ~/.bashrc.docker
+[[ -x ~/.bashrc.git ]] && . ~/.bashrc.git
+[[ -x ~/.bashrc.golang ]] && . ~/.bashrc.golang
+[[ -x ~/.bashrc.kubernetes ]] && . ~/.bashrc.kubernetes
+[[ -x ~/.bashrc.maven ]] && . ~/.bashrc.maven
+[[ -x ~/.bashrc.mysql ]] && . ~/.bashrc.mysql
+[[ -x ~/.bashrc.postgresql ]] && . ~/.bashrc.postgresql
+[[ -x ~/.bashrc.python ]] && . ~/.bashrc.python
 [[ -x ~/.bashrc.ssh ]] && . ~/.bashrc.ssh
+[[ -x ~/.bashrc.terraform ]] && . ~/.bashrc.terraform
+[[ -x ~/.bashrc.vault ]] && . ~/.bashrc.vault
 [[ -x ~/.bashrc.localhost ]] && . ~/.bashrc.localhost
 [[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 #echo DEBUG Finished calling sub-bashrc files
@@ -396,6 +399,13 @@ script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorR
 
 # Display system info using neofetch if installed
 which neofetch >/dev/null 2>&1 && neofetch --title_fqdn on --package_managers on --os_arch on --speed_type current --speed_shorthand on --cpu_brand on --cpu_cores logical --cpu_speed on --cpu_temp C --distro_shorthand on --kernel_shorthand on --uptime_shorthand on --de_version on --shell_path on --shell_version on --disk_percent on --memory_percent on --underline on --bold on --color_blocks on
+
+# neofetch is no longer supported; screenfetch seems a good replacement.
+# https://github.com/KittyKatt/screenFetch/wiki/Installation
+# Install: wget -O screenfetch-dev https://git.io/vaHfR
+which screenfetch-dev >/dev/null 2>&1 && screenfetch-dev
+
+alias sysinfo='echo -e "${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset}" && screenfetch-dev 2>/dev/null'
 
 # Display used/free disk space warning
 df --human-readable --local --print-type --exclude-type=tmpfs | grep -v Mount | grep '[9][0-9]%\|100%' | awk '{print $7" disk space free: "$5" ("$6" used)";}' | grep --color=auto '.*[9][0-9]%.*\|.*100%.*'
