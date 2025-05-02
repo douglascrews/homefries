@@ -1,11 +1,11 @@
 script_echo "Maven setup..."
 
-export M2_HOME=$(ls --directory /usr/local/apache-maven/apache-maven* --reverse | head -n 1)
-if [[ -z "${M2_HOME}" ]]; then
-   echo "ERROR: Maven not found in /usr/local/apache-maven/"
-   return 1
-fi
-#echo "M2_HOME=${M2_HOME}"
+#export M2_HOME=$(ls --directory /usr/local/apache-maven/apache-maven* --reverse | head -n 1)
+#if [[ -z "${M2_HOME}" ]]; then
+#   echo "ERROR: Maven not found in /usr/local/apache-maven/"
+#   return 1
+#fi
+echo "M2_HOME=${M2_HOME}"
 export M2=${M2_HOME}/bin
 export MAVEN_OPTS="-Xms256m -Xmx512m"
 #echo "MAVEN_OPTS=${MAVEN_OPTS}"

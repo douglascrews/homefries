@@ -68,7 +68,7 @@ function help_param() {
    fi
    echo -e ${_message}${colorReset}
 }
-export -f help_param_req
+export -f help_param
 
 # Help output, general notes
 # USAGE: help_note '*Yo, check it out. ' 'This function is awesome, ' '!but it will destroy the world!'

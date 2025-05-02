@@ -18,7 +18,7 @@ if [ ! -w ~/.gitconfig ]; then
    git config --list
 fi
 
-git_ssh_key='douglascrews@github.pem'
+git_ssh_key='github.pem'
 
 ${ECHODO} eval $(ssh-agent -s) >/dev/null 2>&1
 
