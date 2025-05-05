@@ -3,10 +3,6 @@ script_echo "Git s[ucks]etup..."
 # Install Git as needed
 git --version 2>/dev/null || sudo ${PACKAGE_MANAGER} -y install git
 
-export git_user=douglascrews
-export git_email=github@crewstopia.com
-export git_home=github.com
-
 if [ ! -w ~/.gitconfig ]; then
    git config --global user.name "Douglas Crews"
    git config --global user.email "${git_email}"
@@ -18,13 +14,11 @@ if [ ! -w ~/.gitconfig ]; then
    git config --list
 fi
 
-git_ssh_key='github.pem'
-
 ${ECHODO} eval $(ssh-agent -s) >/dev/null 2>&1
 
 # ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/git@github.pem && ssh -T git@${git_home} >/dev/null))
 #ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa && ssh -T git@${git_home} >/dev/null))
-ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/${git_ssh_key} && ssh -T git@${git_home} >/dev/null))
+ssh -T git@$github.com 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/${git_ssh_key} && ssh -T git@github.com >/dev/null))
 
 function git_branch_show
 {
