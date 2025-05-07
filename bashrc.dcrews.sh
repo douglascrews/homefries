@@ -134,15 +134,25 @@ vecho() {
 # export ECHODO=echodo
 # export ECHODO=echodont
 # export ECHODO=
-echodo() {
-   echo $@ && eval $@
+function echodo() {
+   (set -f && echo -e -n "${colorDarkGray}" >&2 && echo -n $@ >&2 && echo -e "${colorReset}" >&2 && set +f && eval $@)
 }
 export -f echodo
 
-echodont() {
-   echo "(echodont): $@"
+function _echodo() { # a version without color formatting, for redirection to log files
+   (set -f && echo "$@" >&2 && set +f && eval $@)
+}
+export -f _echodo
+
+function echodont() {
+   (set -f && echo -e -n "${colorDarkGray}(echodont): " >&2 && echo -n $@ >&2 && echo -e "${colorReset}" >&2)
 }
 export -f echodont
+
+function _echodont() { # a version without color formatting, for redirection to log files
+   (set -f && echo "(echodont): $@" >&2)
+}
+export -f _echodont
 
 # Find File(s)
 ff() {
@@ -390,7 +400,7 @@ export -f salutation
 
 # System information
 HOSTOS="$(cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-)"
-script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} on ${colorCyan}${XDG_CURRENT_DESKTOP:-"unknwon XDG desktop"}${colorReset} joint, $(salutation).
+script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} on ${colorCyan}${XDG_CURRENT_DESKTOP:-"unknown XDG desktop"}${colorReset} joint, $(salutation).
 # Various ways to determine which distro you're running
 #cat /etc/*-release | grep PRETTY_NAME | cut -d '=' -f 2
 #lsb_release 2>/dev/null

@@ -34,7 +34,7 @@ function git_revert() {
    ${ECHODO} git clean -f -d -x
    ${ECHODO} git reset --hard
    git pull
-   git status
+   git status --show-stash
 }
 export -f git_revert
 
@@ -53,5 +53,7 @@ function git_branch_list() {
    ${ECHODO} git fetch --all --prune --refetch --recurse-submodules --set-upstream --progress
    ${ECHODO} git branch --all --list | grep ${1:-""}
 }
+
+alias git_status='${ECHODO} git status --show-stash --branch --verbose'
 
 git --version
