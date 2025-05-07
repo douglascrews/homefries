@@ -390,7 +390,7 @@ export -f salutation
 
 # System information
 HOSTOS="$(cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-)"
-script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} joint, $(salutation).
+script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} on ${colorCyan}${XDG_CURRENT_DESKTOP:-"unknwon XDG desktop"}${colorReset} joint, $(salutation).
 # Various ways to determine which distro you're running
 #cat /etc/*-release | grep PRETTY_NAME | cut -d '=' -f 2
 #lsb_release 2>/dev/null
