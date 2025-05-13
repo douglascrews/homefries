@@ -271,7 +271,7 @@ alias cp='\cp --preserve --interactive'
 alias crontab_all='for f in `sudo ls -b /var/spool/cron` ; do echo $f ; sudo cat /var/spool/cron/$f ; done;'
 alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {} \;'
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
-which dnf 2>/dev/null && alias dnf='sudo \dnf -y'
+which dnf 2>/dev/null && alias dnf='sudo \dnf -y' && which dnf
 alias flavor="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
 alias my_ip='curl -s https://checkip.amazonaws.com'
 
@@ -337,12 +337,15 @@ md5() {
    openssl rsa -in ${1} -pubout -outform DER | openssl md5 -c
 }
 
-which dpkg >/dev/null 2>&1 && alias deb_install='${ECHODO} sudo dpkg -i'
-alias functions='typeset -F'
+which dpkg >/dev/null 2>&1 && alias deb_install='${ECHODO} sudo dpkg -i' && alias deb_install
+alias envs='(set -o posix; set)' # List only environment variables, no functions or aliases
+alias functions='typeset -F' # List only environment functions, no env variables or aliases
 alias la='ls --almost-all'
 alias lal='ls --almost-all -l'
 alias ll='ls -l'
 alias ls='ls --classify --color=tty --human-readable'
+which less >/dev/null 2>&1 && export PAGER=less
+alias links='ls -la $(find . -maxdepth 1 -type l -print)'
 alias m=more
 alias make_list='make -p 2>/dev/null | grep -A 100000 "# Files" | grep -v "^$" | grep -v "^\(\s\|#\|\.\)" | grep -v "Makefile:" | cut -d ":" -f 1 | sort -u'
 alias mv='\mv --interactive'
@@ -360,6 +363,7 @@ which yum 2>/dev/null && alias yum='sudo \yum -y'
 # Automagically alias all ~/bin/*.sh scripts
 if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh`=". ~/bin/`basename $f`"; done; fi;
 
+[[ -x ~/.bashrc.agora ]] && . ~/.bashrc.agora
 [[ -x ~/.bashrc.aws ]] && . ~/.bashrc.aws
 [[ -x ~/.bashrc.devcontainer ]] && . ~/.bashrc.devcontainer
 [[ -x ~/.bashrc.docker ]] && . ~/.bashrc.docker

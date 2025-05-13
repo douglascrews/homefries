@@ -143,6 +143,66 @@ script_echo "Google Cloud setup..."
 
 #    Run $ gcloud help for details.
 
+## Java integration
+# Map GCP_ prefixed environment variables to gcp. system properties
+#if [ ! -z "${GCP_KMS_PROJECT_ID}" ]; then
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.project-id=${GCP_KMS_PROJECT_ID}"
+#fi
+#if [ ! -z "${GCP_KMS_LOCATION_ID}" ]; then
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.location-id=${GCP_KMS_LOCATION_ID}"
+#fi
+#if [ ! -z "${GCP_KMS_KEYRING_ID}" ]; then
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.keyring-id=${GCP_KMS_KEYRING_ID}"
+#fi
+#if [ ! -z "${GCP_KMS_ENCRYPTION_KEY_ID}" ]; then
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.encryption-key-id=${GCP_KMS_ENCRYPTION_KEY_ID}"
+#fi
+#if [ ! -z "${GCP_KMS_PASSWORD_PEPPER_ID}" ]; then
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.password-pepper-id=${GCP_KMS_PASSWORD_PEPPER_ID}"
+#fi
+#if [ ! -z "${GCP_SECRETMANAGER_PROJECT_ID}" ]; then
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.secretmanager.project-id=${GCP_SECRETMANAGER_PROJECT_ID}"
+#fi
+
+# Pass GCP authentication token if provided
+#if [ ! -z "${GOOGLE_OAUTH_ACCESS_TOKEN}" ]; then
+#  log_info "Using provided GOOGLE_OAUTH_ACCESS_TOKEN for authentication"
+#  JAVA_OPTS="${JAVA_OPTS} -Dgoogle.oauth.access.token=${GOOGLE_OAUTH_ACCESS_TOKEN}"
+#fi
+
+## Set default GCP KMS values for QA environment if not provided
+#if [ -z "${GCP_KMS_PROJECT_ID}" ]; then
+#  log_warn "GCP_KMS_PROJECT_ID not set, using default agora-455601"
+#  export GCP_KMS_PROJECT_ID="agora-455601"
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.project-id=agora-455601"
+#fi
+#if [ -z "${GCP_KMS_LOCATION_ID}" ]; then
+#  log_warn "GCP_KMS_LOCATION_ID not set, using default us-central1"
+#  export GCP_KMS_LOCATION_ID="us-central1"
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.location-id=us-central1"
+#fi
+#if [ -z "${GCP_KMS_KEYRING_ID}" ]; then
+#  log_warn "GCP_KMS_KEYRING_ID not set, using default agora-qa-keyring"
+#  export GCP_KMS_KEYRING_ID="agora-qa-keyring"
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.keyring-id=agora-qa-keyring"
+#fi
+#if [ -z "${GCP_KMS_ENCRYPTION_KEY_ID}" ]; then
+#  log_warn "GCP_KMS_ENCRYPTION_KEY_ID not set, using default agora-encryption-key-qa"
+#  export GCP_KMS_ENCRYPTION_KEY_ID="agora-encryption-key-qa"
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.encryption-key-id=agora-encryption-key-qa"
+#fi
+#if [ -z "${GCP_KMS_PASSWORD_PEPPER_ID}" ]; then
+#  log_warn "GCP_KMS_PASSWORD_PEPPER_ID not set, using default agora-password-pepper-qa"
+#  export GCP_KMS_PASSWORD_PEPPER_ID="agora-password-pepper-qa"
+#  JAVA_OPTS="${JAVA_OPTS} -Dgcp.kms.password-pepper-id=agora-password-pepper-qa"
+#fi
+#log_info "KMS Project: ${GCP_KMS_PROJECT_ID}"
+#log_info "KMS Location: ${GCP_KMS_LOCATION_ID}"
+#log_info "KMS Keyring: ${GCP_KMS_KEYRING_ID}"
+#log_info "KMS Encryption Key ID: ${GCP_KMS_ENCRYPTION_KEY_ID}"
+#log_info "KMS Password Pepper ID: ${GCP_KMS_PASSWORD_PEPPER_ID}"
+
+
 alias gc=gcloud
 alias gc_project="gcloud config list --format='text(core.project)'"
 

@@ -1,0 +1,104 @@
+\set QUIET 1
+
+-- Prompts
+--%M : server
+--%m : host name
+--%> : port
+--%n : user
+--%/ : current database
+--%~ : like %/ but ~ for default database
+--%# : '#' if superuser, '>' otherwise
+--%R : SQL status; in prompt1: = normal, ^ single-line mode, ! disconnected; in prompt2: -, *, ', ", $ depending on what it wants closed 
+--%x : transaction status: (empty) not in transaction, * in transaction, ! failed transaction block, ? indeterminate (no connection?)
+--%[...%] : terminal control characters
+--%[%033[1;31m%] red
+--%[%033[1;32m%] green
+--%[%033[1;33m%] yellow
+--%[%033[1;34m%] blue
+--%[%033[1;35m%] magenta
+--%[%033[1;36m%] cyan
+--%[%033[1;37m%] white
+--%[%033[0m%] normal
+
+\set PROMPT1 '%[%033[1;33m%]%M:%>:%/ %[%033[1;31m%]%x%[%033[1;36m%]%n%[%033[0m%]%# '
+\set PROMPT2 '%[%033[1;31m%]...and what? %[%033[0m%]'
+\set PROMPT3 '%[%033[1;31m%]...ain\'t you done yet? %[%033[0m%]'
+
+-- table formatting
+\pset border 2
+-- target width for wrapped format
+\pset columns 0
+-- field separator for unaligned output
+\pset fieldsep '|'
+-- set field separator to a zero byte
+-- \pset fieldsep_zero
+-- output format; unaligned|aligned|wrapped|html|asciidoc|latex|latex-longtable|troff-ms
+\pset format wrapped
+-- border drawing style; ascii|old-ascii|unicode
+\pset linestyle unicode
+-- display local-specific character to separate digits; on|off; default toggles
+\pset numericlocale off
+-- display of NULL values
+\pset null 'ø'
+-- pager; on|off|always
+\pset pager off
+-- pager minimum lines; if less than page height, no pager
+\pset pager_min_lines 0
+-- line separator in unaligned output
+\pset recordsep '\n'
+-- set record separator to a zero byte
+--\pset recordsep_zero
+-- attributes in the table tag for HTML ouput
+--\pset tableattr ???
+-- table title for printed tables; default unset
+--\pset title 'Hey, look at this'
+-- display tuples; on|off; default toggles
+--\pset tuples_only off
+-- border drawing style for unicode style; single|double
+--\pset unicode_border_linestyle single
+-- column drawing style for unicode style; single|double
+--\pset unicode_column_linestyle single
+-- header drawing style for unicode style; single|double
+--\pset unicode_header_linestyle single
+
+-- autocommit; on|off
+\set AUTOCOMMIT off
+-- upper|lower|preserve-upper|preserve-lower
+\set COMP_KEYWORD_CASE preserve-upper
+-- echo queries as they are executed; none|errors|queries|all
+\set ECHO queries
+-- show executed query for psql slash meta commands; on|off|noexec
+\set ECHO_HIDDEN on
+-- history empty/duplicate lines; ignorespace|ignoredups|ignoreboth|none
+\set HISTCONTROL ignoreboth
+-- history file and naming convention
+\set HISTFILE ~/.psql_history- :USER - :HOST - :PORT - :DBNAME
+-- max commands to store in history file
+\set HISTSIZE 2000
+-- number of EOF (Ctrl-D) to ignore before terminating
+\set IGNOREEOF 0
+-- continue transaction on error; on|off|interactive
+\set ON_ERROR_ROLLBACK interactive
+-- display context fields in server messages; never|errors|always
+\set SHOW_CONTEXT errors
+-- newline terminates SQL command; on|off
+\set SINGLELINE off
+-- debugging scripts; on|off
+\set SINGLESTEP off
+-- error verbosity; default|verbose|terse
+\set VERBOSITY verbose
+
+\encoding unicode
+-- Query runtime feedbak; on|off; default toggles
+\timing
+-- extended display; auto|on|off
+-- In the auto setting, the expanded mode is used whenever the query output has more than one column and
+-- is wider than the screen; otherwise, the regular mode is used. The auto setting is only effective in
+-- the aligned and wrapped formats. In other formats, it always behaves as if the expanded mode is off.
+\x auto
+
+-- \include_relative postgresql.psql
+
+\echo So nice to feel your keystrokes again, Master. What are you going to fuck up this time on :DBNAME?
+
+\unset QUIET
