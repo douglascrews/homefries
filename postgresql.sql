@@ -734,6 +734,22 @@ SELECT table_catalog AS cat
  WHERE table_type = 'FOREIGN TABLE'
    AND table_schema NOT IN ('information_schema', 'pg_catalog');
 
+CREATE OR REPLACE VIEW public.user_tables AS
+SELECT table_catalog AS cat
+     , table_schema AS schema
+     , table_name AS name
+     , is_insertable_into AS insert
+     , is_typed AS typed
+     , commit_action
+     , self_referencing_column_name AS self_ref_col_name
+     , reference_generation
+     , user_defined_type_catalog AS user_def_cat
+     , user_defined_type_schema AS user_def_schema
+     , user_defined_type_name AS user_def_name
+  FROM information_schema.tables
+ WHERE table_type = 'BASE TABLE'
+   AND table_schema = CURRENT_SCHEMA;
+
 CREATE OR REPLACE VIEW public.user_foreign_tables AS
 SELECT table_catalog AS cat
      , table_schema AS schema

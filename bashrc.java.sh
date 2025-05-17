@@ -6,6 +6,13 @@ alias sbstop="mvn spring-boot:stop"
 alias mvn_run=sbrun
 alias mvn_stop=sbstop
 
+# SDKMAN https://sdkman.io/
+if [[ -a ~/.sdmanrc ]]; then
+   alias java_sdk_install='${ECHODO} sdk env install' # install JDK version
+   alias java_sdk_use='${ECHODO} sdk env' # Switch to specified JDK version
+   alias | grep java_sdk
+fi
+
 # Pass environment variables to JVM system properties
 JAVA_OPTS="${JAVA_TOOL_OPTIONS}"
 

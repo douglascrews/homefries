@@ -18,18 +18,27 @@ function psql_connect() {
 
    # help
    [[ "${1}" == "--help" ]] || [[ "${1}" == "-h" ]] && {
-      help_headline ${FUNCNAME} [hostname] [port] [user] [password] [database]
-      help_param '[host]' 'Hostname to connect to' "\${PSQL_HOST} or ${default_host}"
-      help_param '[port]' 'Port to connect to' "\${PSQL_PORT} or ${default_port}"
-      help_param '[user]' 'User to connect as' "\${PSQL_USER} or ${default_user}"
-      help_param '[password]' 'Password to connect with' "\${PSQL_PW} or \${PGPASSWORD}"
-      help_param '[database]' 'Database to connect to' "\${PSQL_DB} or ${default_database}"
+      help_headline ${FUNCNAME} [hostname] [port] [user] [password] [database] [additional psql params...]
+      help_param '[host]' 'Hostname to connect to' "\${PGHOST} or ${default_host}"
+      help_param '[port]' 'Port to connect to' "\${PGPORT} or ${default_port}"
+      help_param '[user]' 'User to connect as' "\${PGUSER} or ${default_user}"
+      help_param '[password]' 'Password to connect with' "\${PGPASSWORD}"
+      help_param '[database]' 'Database to connect to' "\${PGDATABASE} or ${default_database}"
+      help_param '[additional psql params...]' "See psql --help for additonal parameter options"
       help_note "Parameters are positional, so if you want to specify a database, you must also specify host, port, user, password. Sue me, I'm lazy."
       return 0
    }
    
    # Parameters are positional; order matters
-   PGPASSWORD=${4:-${PSQL_PW}} ${ECHODO} psql --host=${1:-${PSQL_HOST:-${default_host}}} --port=${2:-${PSQL_PORT:-${default_port}}} --username=${3:-${PSQL_USER:-${default_user}}} --dbname=${5:-${PSQL_DB:-${default_database}}}
+   [[ -n "${1}" ]] && export PGHOST=${1:-${default_host}}
+   [[ -n "${2}" ]] && export PGPORT=${2:-${default_port}}
+   [[ -n "${3}" ]] && export PGUSER=${3:-${default_user}}
+   [[ -n "${4}" ]] && export PGPASSWORD=${4:-${default_password}}
+   [[ -n "${5}" ]] && export PGDATABASE=${5:-${default_database}}
+   shift; shift; shift; shift; shift;
+   
+#   PGPASSWORD=${4:-${PGPASSWORD}} ${ECHODO} psql --host=${1:-${PGHOST:-${default_host}}} --port=${2:-${PGPORT:-${default_port}}} --username=${3:-${PGUSER:-${default_user}}} --dbname=${5:-${PGDATABASE:-${default_database}}}
+   psql "${@}"
 }
 export -f psql_connect
 
@@ -46,16 +55,16 @@ function psql_run() {
    [[ "${1}" == "--help" ]] || [[ "${1}" == "-h" ]] && {
       help_headline ${FUNCNAME} [SQL command]
       help_note "You may need to define the following environment variables:"
-      help_param PSQL_HOST "\${PSQL_HOST} (${PSQL_HOST})" ${default_host}
-      help_param PSQL_PORT "\${PSQL_PORT} (${PSQL_PORT})" ${default_port}
-      help_param PSQL_USER "\${PSQL_USER} (${PSQL_USER})" ${default_user}
+      help_param PGHOST "\${PGHOST} (${PGHOST})" ${default_host}
+      help_param PGPORT "\${PGPORT} (${PGPORT})" ${default_port}
+      help_param PGUSER "\${PGUSER} (${PGUSER})" ${default_user}
       help_param PSQL_PW "\t\${PSQL_PW} (\${PGPASSWORD})" $(([[ -n "${PGPASSWORD}" ]] && echo "(set)") || echo "(not set)")
-      help_param PSQL_DB "\t\${PSQL_DB} (${PSQL_DB})" ${default_database}
+      help_param PGDATABASE "\t\${PGDATABASE} (${PGDATABASE})" ${default_database}
       return 0;
    }
    
    set -o noglob # Do not expand the SQL command parameter into separate params, pass it as a string
-   PGPASSWORD=${4:-${PSQL_PW}} ${ECHODO} psql --host=${PSQL_HOST:-${default_host}} --port=${PSQL_PORT:-${default_port}} --username=${PSQL_USER:-${default_user}} --dbname=${PSQL_DB:-${default_database}} --dbname=${PSQL_DB:-${default_database}} --command="${*}"
+   PGPASSWORD=${PGPASSWORD:=${default_password}} ${ECHODO} psql --host=${PGHOST:=${default_host}} --port=${PGPORT:=${default_port}} --username=${PGUSER:=${default_user}} --dbname=${PGDATABASE:=${default_database}} --dbname=${PGDATABASE:=${default_database}} --command="${*}"
 }
 export -f psql_run
 
@@ -72,26 +81,26 @@ function psql_test() {
    # help
    [[ "${1}" == "--help" ]] || [[ "${1}" == "-h" ]] && { \
       help_headline ${FUNCNAME} [hostname] [port] [user] [password] [database] [wait_seconds]
-      help_param "[host]" "Hostname to connect to" "\${PSQL_HOST} or ${default_host}"
-      help_param "[port]" "Port to connect to" "\${PSQL_PORT} or ${default_port}"
-      help_param "[user]" "User to connect as" "\${PSQL_USER} or ${default_user}"
+      help_param "[host]" "Hostname to connect to" "\${PGHOST} or ${default_host}"
+      help_param "[port]" "Port to connect to" "\${PGPORT} or ${default_port}"
+      help_param "[user]" "User to connect as" "\${PGUSER} or ${default_user}"
       help_param "[password]" "Password to connect with" "\${PSQL_PW} or \${PGPASSWORD}"
-      help_param "[database]" "Database to connect to" "\${PSQL_DB} or ${default_database}"
+      help_param "[database]" "Database to connect to" "\${PGDATABASE} or ${default_database}"
       help_param "[wait_seconds]" "Seconds to wait for connection" "\${PSQL_WAITSEC} or ${default_wait_seconds}"
       help_note "Parameters are positional, so if you want to specify a database, you must also specify host, port, user, password. Sue me, I'm lazy."
       return 0; \
    }
 
    # Parameters are positional; order matters
-   PSQL_HOST=${1:-${PSQL_HOST:-${default_host}}}
-   PSQL_PORT=${2:-${PSQL_PORT:-${default_port}}}
-   PSQL_USER=${3:-${PSQL_USER:-${default_user}}}
+   PGHOST=${1:-${PGHOST:-${default_host}}}
+   PGPORT=${2:-${PGPORT:-${default_port}}}
+   PGUSER=${3:-${PGUSER:-${default_user}}}
    PSQL_PW=${4:-${PSQL_PW:-${default_password}}}
-   PSQL_DB=${5:-${PSQL_DB:-${default_database}}}
+   PGDATABASE=${5:-${PGDATABASE:-${default_database}}}
    PSQL_WAITSEC=${6:-${PSQL_WAITSEC:-${default_wait_seconds}}}
-   PGPASSWORD=${PSQL_PW} ${ECHODO} pg_isready --host=${PSQL_HOST} --port=${PSQL_PORT} --username=${PSQL_USER} --dbname=${PSQL_DB} --timeout=${PSQL_WAITSEC} || echo -e "${colorRed}psql connection failed.${colorReset}"
-   # Fallback is pg_isready is not found
-   #PGPASSWORD=${4:-${PSQL_PW}} ${ECHODO} psql --host=${1:-${PSQL_HOST:-${default_host}}} --port=${2:-${PSQL_PORT:-${default_port}}} --username=${3:-${PSQL_USER:-${default_user}}} --dbname=${5:-${PSQL_DB:-${default_database}}} --command='SELECT current_database(), current_user;' || echo -e "${colorRed}psql connection failed.${colorReset}"
+   PGPASSWORD=${PSQL_PW} ${ECHODO} pg_isready --host=${PGHOST} --port=${PGPORT} --username=${PGUSER} --dbname=${PGDATABASE} --timeout=${PSQL_WAITSEC} || echo -e "${colorRed}psql connection failed.${colorReset}"
+   # Fallback if pg_isready is not found
+   #PGPASSWORD=${4:-${PSQL_PW}} ${ECHODO} psql --host=${1:-${PGHOST:-${default_host}}} --port=${2:-${PGPORT:-${default_port}}} --username=${3:-${PGUSER:-${default_user}}} --dbname=${5:-${PGDATABASE:-${default_database}}} --command='SELECT current_database(), current_user;' || echo -e "${colorRed}psql connection failed.${colorReset}"
 }
 export -f psql_test
 

@@ -1,7 +1,7 @@
 script_echo "Git s[ucks]etup..."
 
 # Install Git as needed
-git --version 2>/dev/null || sudo ${PACKAGE_MANAGER} -y install git
+#git --version 2>/dev/null || sudo ${PACKAGE_MANAGER} -y install git
 
 if [ ! -w ~/.gitconfig ]; then
    git config --global user.name "Douglas Crews"
@@ -14,11 +14,10 @@ if [ ! -w ~/.gitconfig ]; then
    git config --list
 fi
 
-${ECHODO} eval $(ssh-agent -s) >/dev/null 2>&1
+eval $(ssh-agent -s) >/dev/null 2>&1
 
-# ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/git@github.pem && ssh -T git@${git_home} >/dev/null))
-#ssh -T git@${git_home} 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa && ssh -T git@${git_home} >/dev/null))
-ssh -T git@$github.com 2>/dev/null || (ssh-add -l 2>/dev/null | grep ${git_email} >/dev/null || (${ECHODO} eval $(ssh-agent) && ssh-add ~/.ssh/${git_ssh_key} && ssh -T git@github.com >/dev/null))
+alias git_identities='ssh-add -l'
+alias git_can_connect='ssh -T git@github.com'
 
 function git_branch_show
 {
@@ -37,6 +36,11 @@ function git_revert() {
    git status --show-stash
 }
 export -f git_revert
+
+function git_pull() {
+   ${ECHODO} git pull --verbose --autostash --prune --set-upstream --progress # --recurse-submodules=yes
+}
+export -f git_pull
 
 alias git_set_upstream='${ECHODO} git branch --set-upstream-to=origin/$(git symbolic-ref --short HEAD)'
 

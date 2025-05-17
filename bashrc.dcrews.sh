@@ -272,7 +272,8 @@ alias crontab_all='for f in `sudo ls -b /var/spool/cron` ; do echo $f ; sudo cat
 alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {} \;'
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
 which dnf 2>/dev/null && alias dnf='sudo \dnf -y' && which dnf
-alias flavor="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
+alias os_flavor="\grep --no-filename ID_LIKE /etc/*release* | sed -e 's/ID_LIKE=//;s/\"//g'"
+alias os_name="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
 alias my_ip='curl -s https://checkip.amazonaws.com'
 
 # export aliases to scripts
@@ -404,7 +405,8 @@ export -f salutation
 
 # System information
 HOSTOS="$(cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-)"
-script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorReset} on ${colorCyan}${XDG_CURRENT_DESKTOP:-"unknown XDG desktop"}${colorReset} joint, $(salutation).
+FLAVOR="$(\grep --no-filename ID_LIKE /etc/*release* | sed -e 's/ID_LIKE=//;s/\"//g')"
+script_echo -e This is a ${colorCyan}${HOSTOS:=unidentified} $(uname -m)${colorLightCyan} \(${FLAVOR}\)${colorReset} on ${colorCyan}${XDG_CURRENT_DESKTOP:-"unknown XDG desktop"}${colorReset} joint, $(salutation).
 # Various ways to determine which distro you're running
 #cat /etc/*-release | grep PRETTY_NAME | cut -d '=' -f 2
 #lsb_release 2>/dev/null
