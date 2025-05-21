@@ -9,8 +9,8 @@ echo Setting up local environment...
 #######################################
 #(which firewall-cmd > /dev/null 2>&1) && (sudo firewall-cmd --zone=public --add-port=8080/tcp && sudo firewall-cmd --zone=public --list-all && sudo iptables -L -n)
 
-[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
-[[ -x ~/.bashrc.colors ]] && . ~/.bashrc.colors
+[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME} # not saved to repo; local only
+[[ -x ~/.bashrc.colors ]] && . ~/.bashrc.colors # colorful output and function help messages
 
 # Reference implementation, overridden in .bashrc.git
 function git_branch_show() { 
@@ -367,7 +367,6 @@ which yum 2>/dev/null && alias yum='sudo \yum -y'
 # Automagically alias all ~/bin/*.sh scripts
 if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias $(basename $f .sh)=". ~/bin/$(basename $f)"; done; fi;
 
-[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME} # not saved to repo; local only
 [[ -x ~/.bashrc.agora ]] && . ~/.bashrc.agora
 [[ -x ~/.bashrc.aws ]] && . ~/.bashrc.aws
 [[ -x ~/.bashrc.devcontainer ]] && . ~/.bashrc.devcontainer

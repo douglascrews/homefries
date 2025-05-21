@@ -15,7 +15,7 @@ function mysql_connect() {
    local default_user=root
    local default_password=
    local default_database=information_schema
-   local default_protocol=tcp
+   local default_protocol=TCP # TCP|SOCKET|PIPE|MEMORY
    local default_comments=true
 
    # help
@@ -40,12 +40,12 @@ function mysql_connect() {
    [[ -n "${1}" ]] && export MYSQL_HOST=${1:-${default_host}}
    [[ -n "${2}" ]] && export MYSQL_PORT=${2:-${default_port}}
    [[ -n "${3}" ]] && export MYSQL_USER=${3:-${default_user}}
-   [[ -n "${4}" ]] && export MYSQL_PASSWORD=${4:-${default_password}}
+   [[ -n "${4}" ]] && export MYSQL_PW=${4:-${default_password}}
    [[ -n "${5}" ]] && export MYSQL_DB=${5:-${default_database}}
    [[ -n "${6}" ]] && export MYSQL_PROTOCOL=${6:-${default_protocol}}
-   [[ -n "${5}" ]] && export MYSQL_COMMENTS=${7:-${default_comments}}
+   [[ -n "${7}" ]] && export MYSQL_COMMENTS=${7:-${default_comments}}
    shift; shift; shift; shift; shift; shift; shift;
-   
+
    # Beware, mysql password parameters are passed in clear text. Boo!
    ${ECHODO} mysql --host=${MYSQL_HOST} --port=${MYSQL_PORT} --user=${MYSQL_USER} --password${password_equal}${MYSQL_PW} --database=${MYSQL_DB} --protocol=${MYSQL_PROTOCOL} --tee=mysql.log --comments=${MYSQL_COMMENTS} --no-auto-rehash
 }
