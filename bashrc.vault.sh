@@ -7,7 +7,7 @@ export VAULT_BRANCH=secret/blah/yecch/${VAULT_STRIPE}
 export VAULT_CACERT="This value needs to be set locally"
 export VAULT_USER=${USER}
 
-vaultlogin_curl() {
+function vaultlogin_curl() {
    VAULTPW=${VAULT_PW}
    [[ -n "${VAULTPW}" ]] || (read -p "Password: " -s VAULTPW && echo "(got it)")
    PAYLOAD="{\"password\":\"${VAULTPW:-${VAULT_PW}}\"}"
@@ -28,7 +28,7 @@ vaultlogin_curl() {
 #   curl --cacert ${VAULT_CACERT} -H '"Content-Type: application/json"' -L -X POST -d "'{"'"password"':'"'${VAULT_PW}'"'"}'" ${VAULT_ADDR}/v1/auth/${VAULT_STRIPE}/login/${VAULT_USER:-${USER}} | jq '.auth.client_token' | tee ~/.vault-token 2>&1 && echo "Success"
 }
 
-vaultlist_curl() {
+function vaultlist_curl() {
    curl --cacert ${VAULT_CACERT} -H "X-Vault-Token:`cat ~/.vault-token`" --request LIST ${VAULT_ADDR}/v1/blah/yecch/metadata/${VAULT_STRIPE}
 }
 
@@ -36,11 +36,11 @@ alias vaultlogin_native="vault auth -method=ldap -path=${VAULT_STRIPE} username=
 
 alias vaultlogin=vaultlogin_curl
 
-vm() {
+function vm() {
    vaultmanager --configfile=.vaultmanager --token=`cat ~/.vault-token` $*
 }
 
-_vault_write() {
+function vault_write() {
    vault_leaf=${1};
    shift;
    secret=`vault read ${VAULT_BRANCH}/${vault_leaf}`
@@ -49,24 +49,24 @@ _vault_write() {
    unset secret
    vault write ${VAULT_BRANCH}/${vault_leaf} ${*}
 }
-alias vault_write=_vault_write
+export -f vault_write
 
-_vault_read() {
+function vault_read() {
    ${ECHODO} vault read ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${VAULT_BRANCH}/${1}
 }
-alias vault_read=_vault_read
+export -f vault_read
 
-_vault_get() {
+function vault_get() {
        ${ECHODO}   curl --insecure --cacert ${VAULT_CACERT} -H "X-Vault-Token:`cat ~/.vault-token`" -L -X GET ${VAULT_ADDR}/v1/${VAULT_BRANCH}/${1}
 }
-alias vault_get=_vault_get
+export -f vault_get
 
-_vault_list() {
+function vault_list() {
    ${ECHODO} vault list ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${VAULT_BRANCH}/${1}
 }
-alias vault_list=_vault_list
+export -f vault_list
 
-_vault_del() {
+function vault_del() {
    vault_leaf=${1};
    shift;
    secret=`vault read ${VAULT_BRANCH}/${vault_leaf}`
@@ -75,9 +75,10 @@ _vault_del() {
    unset secret
    vault delete ${VAULT_BRANCH}/${vault_leaf}
 }
-alias vault_del=_vault_del
+export -f vault_del
 
-#declare -F | grep vault
-#declare -F | grep vm
+declare -F | grep vault
+declare -F | grep vm
 alias | grep vault
+
 vault --version

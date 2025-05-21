@@ -9,10 +9,11 @@ echo Setting up local environment...
 #######################################
 #(which firewall-cmd > /dev/null 2>&1) && (sudo firewall-cmd --zone=public --add-port=8080/tcp && sudo firewall-cmd --zone=public --list-all && sudo iptables -L -n)
 
-[[ -r ~/.bashrc.colors ]] && . ~/.bashrc.colors
+[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
+[[ -x ~/.bashrc.colors ]] && . ~/.bashrc.colors
 
 # Reference implementation, overridden in .bashrc.git
-function git_branch_show { 
+function git_branch_show() { 
    echo ""
 }
 
@@ -24,14 +25,14 @@ export PS1="[\[${colorCyan}\]\u@\h\[${colorReset}\] \[${colorYellow}\]\W\[${colo
 ##### Shell Functions #####
 
 # CD #
-cd_() {
+function cd_() {
    \pushd . >/dev/null && \cd -P ${1:-~}
 }
 alias cd=cd_
 alias cd-="popd >/dev/null"
 
 # FILES #
-whatis() {
+function whatis() {
    alias ${1} 2>/dev/null || type ${1} 2>/dev/null || which ${1}
 #   (alias; declare -f) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
 };
@@ -82,7 +83,7 @@ export -f whatis
 #which restore >/dev/null 2>&1 || alias restore=_restore
 
 # Toggle ".not" file extension
-not() {
+function not() {
    for f in $(\ls ${*}) ; do
       # Can not use basename because it strips the path
       local bf=$(echo ${f} | sed -e "s/\.not//")
@@ -114,7 +115,7 @@ function yesno() {
 export -f yesno
 
 # Repeat the command until success is returned
-wait_for() {
+function wait_for() {
    retval=255
    while [ $retval -eq 255 ]; do
       sleep 1
@@ -124,7 +125,7 @@ wait_for() {
 }
 
 # Echo message only if the VERBOSE system variable is set
-vecho() {
+function vecho() {
    [ -n "${VERBOSE}" ] && echo ${@}
 }
 
@@ -155,19 +156,19 @@ function _echodont() { # a version without color formatting, for redirection to 
 export -f _echodont
 
 # Find File(s)
-ff() {
+function ff() {
    ${ECHODO} find . -name "$1" -print 2> /dev/null
 }
 
 # an unelevated version of "watch"
-repeat() {
+function repeat() {
    while [ true ]; do
       ${ECHODO} ${*} || break;
    done
 }
 
 # Check VPN connection is active
-vpn_active() {
+function vpn_active() {
    # help
    [[ "${*}" =~ --help ]] || [[ "${#}" < 0 ]] && { \
       echo -e "${FUNCNAME} [-v]"; \
@@ -192,7 +193,7 @@ vpn_active() {
 }
 
 # Check that VPN connection is active; throw error if not
-vpn_required() {
+function vpn_required() {
    local vpn_ip=172.27.243.1
    local verbose=0;
    local -
@@ -202,7 +203,7 @@ vpn_required() {
 }
 
 # Check that root access is available; throw error if not
-root_required() {
+function root_required() {
    if [[ "$(id -u)" -ne 0 ]]; then
       echo -e "Script must be run as root. Might I suggest some mild profanity?" >&2;
    else
@@ -213,7 +214,7 @@ export -f root_required
 
 # DELETE/UNDELETE #
 
-del() {
+function del() {
    if [[ ! -d ~/.Trash ]]; then
       echo "Setting up trashcan..."
       mkdir ~/.Trash
@@ -229,7 +230,7 @@ del() {
    fi
 }
 
-undelete() {
+function undelete() {
    if [[ -z ${DELETED_FILES} ]]; then
       echo "No DELETED_FILES found to undelete. Sucks to be you, huh?";
    else
@@ -247,13 +248,15 @@ undelete() {
    fi
 }
 
-get_row() {
+function get_row() {
    awk "NR==${1:-1}"
 }
+export -f get_row
 
-get_col() {
+function get_col() {
    awk "{ print \$${1:-1} }"
 }
+export -f get_col
 
 # Install useful utilities as needed
 export PACKAGE_MANAGER=$(which apt 2>/dev/null || which apt-get 2>/dev/null)$(which dnf 2>/dev/null || which yum 2>/dev/null)
@@ -271,7 +274,7 @@ alias cp='\cp --preserve --interactive'
 alias crontab_all='for f in `sudo ls -b /var/spool/cron` ; do echo $f ; sudo cat /var/spool/cron/$f ; done;'
 alias d2u='find . -exec dos2unix {} \; && find . -name "*.bat" -exec unix2dos {} \;'
 alias disk='df --human-readable --local --print-type --exclude-type=tmpfs'
-which dnf 2>/dev/null && alias dnf='sudo \dnf -y' && which dnf
+which dnf 2>/dev/null && alias dnf='sudo \dnf -y'
 alias os_flavor="\grep --no-filename ID_LIKE /etc/*release* | sed -e 's/ID_LIKE=//;s/\"//g'"
 alias os_name="cat /etc/*-release 2>/dev/null | grep PRETTY_NAME | cut -c 13-"
 alias my_ip='curl -s https://checkip.amazonaws.com'
@@ -287,7 +290,7 @@ shopt -s expand_aliases
 alias COMMENT_START='[[ -n "${DEBUG}" ]] && cat <<"#COMMENT_END"'
 
 #alias fuck='echodo sudo $(history -p \!\!)'
-fuck() {
+function fuck() {
    if [[ -z "${1}" ]]; then
       ${ECHODO} sudo $(history -p \!\! | sed -e 's/root_required //') # repeat last command with sudo, ignoring root_required function
    elif [[ "${1}" == "off" ]]; then
@@ -306,8 +309,8 @@ fuck() {
 }
 
 # try...catch...die
-say() { echo "${@}" >&2; }
-die() {
+function say() { echo "${@}" >&2; }
+function die() {
    say "ERROR executing: $*";
    if [[ $(ps -T | wc -l) -gt 5 ]]; then
       # We can exit the script without killing the bash console
@@ -317,16 +320,16 @@ die() {
       echo "Exited.";
    fi;
 }
-catch() { "${@}" || die "ERROR: ${*}"; }
-try() { say "Attempting: ${*}" && catch "$@"; }
+function catch() { "${@}" || die "ERROR: ${*}"; }
+function try() { say "Attempting: ${*}" && catch "$@"; }
 
-sha256() {
+function sha256() {
    # This uses the public key
    echodo ssh-keygen -l -f ${1:-~/.ssh/dougcrews.pub}
 }
 
 # Verify fingerprint of AWS (and others) SSH keys
-md5() {
+function md5() {
    # help
    [[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
       echo -e "${FUNCNAME} path/to/key.pem"; \
@@ -362,8 +365,9 @@ alias watch_that='echodo watch --beep --differences --interval 1 $(history -p \!
 which yum 2>/dev/null && alias yum='sudo \yum -y'
 
 # Automagically alias all ~/bin/*.sh scripts
-if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh`=". ~/bin/`basename $f`"; done; fi;
+if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias $(basename $f .sh)=". ~/bin/$(basename $f)"; done; fi;
 
+[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME} # not saved to repo; local only
 [[ -x ~/.bashrc.agora ]] && . ~/.bashrc.agora
 [[ -x ~/.bashrc.aws ]] && . ~/.bashrc.aws
 [[ -x ~/.bashrc.devcontainer ]] && . ~/.bashrc.devcontainer
@@ -379,10 +383,9 @@ if [[ -d ~/.bin ]]; then for f in $( \ls ~/bin/*.sh ); do alias `basename $f .sh
 [[ -x ~/.bashrc.terraform ]] && . ~/.bashrc.terraform
 [[ -x ~/.bashrc.vault ]] && . ~/.bashrc.vault
 [[ -x ~/.bashrc.localhost ]] && . ~/.bashrc.localhost
-[[ -x ~/.bashrc.${HOSTNAME} ]] && . ~/.bashrc.${HOSTNAME}
 #echo DEBUG Finished calling sub-bashrc files
 
-salutation() {
+function salutation() {
    #local r=$(( 1+( $(od -An -N1 -i /dev/random) )%(5) ));
    local r=$(( 1+(RANDOM*5/32767) ))
    if [[ $r -eq 1 ]]; then

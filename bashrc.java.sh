@@ -7,9 +7,10 @@ alias mvn_run=sbrun
 alias mvn_stop=sbstop
 
 # SDKMAN https://sdkman.io/
-if [[ -a ~/.sdmanrc ]]; then
-   alias java_sdk_install='${ECHODO} sdk env install' # install JDK version
-   alias java_sdk_use='${ECHODO} sdk env' # Switch to specified JDK version
+if [[ -n "${SDKMAN_DIR}" ]]; then
+   alias java_sdk_init='${ECHODO} sdk env init' # create .sdkmanrc in current directory
+   alias java_sdk_install='${ECHODO} sdk env install' # install JDK version to disk
+   alias java_sdk_use='${ECHODO} sdk env' # switch to .sdkmanrc JDK version
    alias | grep java_sdk
 fi
 

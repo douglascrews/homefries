@@ -1,4 +1,5 @@
-# echo -e ${colorBlack} Black ${colorDarkGray} Dark Gray ${colorBlue} Blue ${colorLightBlue} Light Blue ${colorGreen} Green ${colorLightGreen} Light Green ${colorCyan} Cyan ${colorLightCyan} Light Cyan ${colorRed} Red ${colorLightRed} Light Red ${colorPurple} Purple ${colorLightPurple} Light Purple ${colorBrownOrange} Brown/Orange ${colorYellow} Yellow ${colorLightGray} Light Gray ${colorWhite} White ${colorReset}
+echo "Colors setup..."
+
 export colorBlack='\e[0;30m'
 export colorDarkGray='\e[1;30m'
 export colorBlue='\e[0;34m'
@@ -16,14 +17,15 @@ export colorYellow='\e[1;33m'
 export colorLightGray='\e[0;37m'
 export colorWhite='\e[1;37m'
 export colorReset='\e[0m'
+# echo -e ${colorBlack} Black ${colorDarkGray} Dark Gray ${colorBlue} Blue ${colorLightBlue} Light Blue ${colorGreen} Green ${colorLightGreen} Light Green ${colorCyan} Cyan ${colorLightCyan} Light Cyan ${colorRed} Red ${colorLightRed} Light Red ${colorPurple} Purple ${colorLightPurple} Light Purple ${colorBrownOrange} Brown/Orange ${colorYellow} Yellow ${colorLightGray} Light Gray ${colorWhite} White ${colorReset}
 
 # Color formatting of function help messages:
 #[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
-#   help_headline ${FUNCNAME} name [age] [gender]
-#   help_param 'name' 'This is a required parameter'
-#   help_param '[age]' 'This is an optional parameter with no default'
-#   help_param '[gender]' 'This is an optional parameter with a default value' 'female'
-#   help_note '*Note: ' 'This function has a side effect. ' '!It might destroy the world.'
+#   help_headline "${FUNCNAME}" "name" "[age]" "[gender]"
+#   help_param "name" "This is a required parameter"
+#   help_param "[age]" "This is an optional parameter with no default"
+#   help_param "[gender]" "This is an optional parameter with a default value" "female"
+#   help_note "*Note: " "This function has a side effect. " "!It might destroy the world."
 #   return 0;
 #}
 

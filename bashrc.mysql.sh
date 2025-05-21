@@ -8,11 +8,11 @@ export MYSQL_PS1="\u@\h (\v) [\d]> "
 #}
 
 # Convenience/documentation function for MySQL connections
-mysql_connect() {
+function mysql_connect() {
    # default params
    local default_host=localhost
    local default_port=3306
-   local default_user=admin
+   local default_user=root
    local default_password=
    local default_database=information_schema
    local default_protocol=tcp
@@ -20,53 +20,62 @@ mysql_connect() {
 
    # help
    [[ "${1}" == "--help" ]] || [[ "${1}" == "-h" ]] && { \
-      echo -e "\
-${FUNCNAME}() [hostname] [port] [user] [password] [database] [protocol] [comments?]\n \
-\t [host] Hostname to connect to (default \${MYSQL_HOST} or ${default_host})\n \
-\t [port] Port to connect to (default \${MYSQL_PORT} or ${default_port})\n \
-\t [user] User to connect as (default \${MYSQL_USER} or ${default_user})\n \
-\t [password] Password to connect with (default \${MYSQL_PW} or via prompt)\n \
-\t [database] Database to connect to (default \${MYSQL_DB} or ${default_database})\n \
-\t [protocol] Protocol to connect with (default \${MYSQL_PROTOCOL} or ${default_protocol})\n \
-\t [comments?] Enable comments? (default \${MYSQL_COMMENTS} or ${default_comments})\n \
-Parameters are numbered, so if you want to specify a database, you must also specify host, port, user, password. Sue me, I'm lazy. \
-"; \
-      return 0; \
+      help_headline ${FUNCNAME} [hostname] [port] [user] [password] [database] [protocol] [comments?]
+      help_param "[host]" "Hostname to connect to" "\${MYSQL_HOST} or ${default_host}"
+      help_param "[port]" "Port to connect to" "\${MYSQL_PORT} or ${default_port}"
+      help_param "[user]" "User to connect as" "\${MYSQL_USER} or ${default_user}"
+      help_param "[password]" "Password to connect with" "\${MYSQL_PW} or via prompt"
+      help_param "[database]" "Database to connect to" "\${MYSQL_DB} or ${default_database}"
+      help_param "[protocol]" "Protocol to connect with" "\${MYSQL_PROTOCOL} or ${default_protocol}"
+      help_param "[comments?]" "Enable comments?" "\${MYSQL_COMMENTS} or ${default_comments}"
+      help_note "*Parameters are positional" ", so if you want to specify a database, you must also specify host, port, user, password. Sue me, I'm lazy."
+      help_note "!Beware, mysql password parameters are passed in clear text. Boo!"
+      return 0
    }
    
    # If no password parameter passed, mangle the command line to request it entered manually
    [[ -n "${4:-${MYSQL_PW}}" ]] && local password_equal="="
-   # Parameters are locational; order matters
+
+   # Save defaults for future executions
+   [[ -n "${1}" ]] && export MYSQL_HOST=${1:-${default_host}}
+   [[ -n "${2}" ]] && export MYSQL_PORT=${2:-${default_port}}
+   [[ -n "${3}" ]] && export MYSQL_USER=${3:-${default_user}}
+   [[ -n "${4}" ]] && export MYSQL_PASSWORD=${4:-${default_password}}
+   [[ -n "${5}" ]] && export MYSQL_DB=${5:-${default_database}}
+   [[ -n "${6}" ]] && export MYSQL_PROTOCOL=${6:-${default_protocol}}
+   [[ -n "${5}" ]] && export MYSQL_COMMENTS=${7:-${default_comments}}
+   shift; shift; shift; shift; shift; shift; shift;
+   
    # Beware, mysql password parameters are passed in clear text. Boo!
-   ${ECHODO} mysql --host=${1:-${MYSQL_HOST:-${default_host}}} --port=${2:-${MYSQL_PORT:-${default_port}}} --user=${3:-${MYSQL_USER:-${default_user}}} --password${password_equal}${4:-${MYSQL_PW}} --database=${5:-${MYSQL_DB:-${default_database}}} --protocol=${6:-${MYSQL_PROTOCOL:-${default_protocol}}} --tee=mysql.log --comments=${7:-${MYSQL_COMMENTS:-${default_comments}}} --no-auto-rehash
+   ${ECHODO} mysql --host=${MYSQL_HOST} --port=${MYSQL_PORT} --user=${MYSQL_USER} --password${password_equal}${MYSQL_PW} --database=${MYSQL_DB} --protocol=${MYSQL_PROTOCOL} --tee=mysql.log --comments=${MYSQL_COMMENTS} --no-auto-rehash
 }
 export -f mysql_connect
 
 # Convenience/documentation function for MySQL script execution
-mysql_run() {
+function mysql_run() {
    # default params
    local default_host=localhost
    local default_port=3306
-   local default_user=admin
+   local default_user=root
    local default_password=
-   local default_database=punchh_production
+   local default_database=information_schema
    local default_protocol=tcp
    local default_comments=true
 
    # help
    [[ "${1}" == "--help" ]] || [[ "${1}" == "-h" ]] && { \
-      echo -e " \
-${FUNCNAME}() \"[SQL command]\" or \"source [scriptname]\"\n \
-\t You may need to define the following environment variables:\n \
-\t MYSQL_HOST (default ${MYSQL_HOST:-${default_host}})\n \
-\t MYSQL_PORT (default ${MYSQL_PORT:-${default_port}})\n \
-\t MYSQL_USER (default ${MYSQL_USER:-${default_user}})\n \
-\t MYSQL_PW (via prompt)\n \
-\t MYSQL_DB (default ${MYSQL_DB:-${default_database}})\n \
-\t MYSQL_PROTOCOL (default ${MYSQL_PROTOCOL:-${default_protocol}})\n \
-\t MYSQL_COMMENTS (default ${MYSQL_COMMENTS:-${default_comments}}) \
-"; \
-      return 0; \
+      help_headline ${FUNCNAME} '"SQL command"'
+      help_headline ${FUNCNAME} 'source "scriptname"'
+      help_note "You may need to define the following environment variables:"
+      help_param MYSQL_HOST "Hostname to connect to" "${default_host}"
+      help_param MYSQL_PORT "Port to connect to" "${default_port}"
+      help_param MYSQL_USER "User to connect as" "${default_user}"
+      help_param MYSQL_PW "Password to connect with" "(via prompt)"
+      help_param MYSQL_DB "Database to connect to" "${default_database}"
+      help_param MYSQL_PROTOCOL "Protocol to connect with" "${default_protocol}"
+      help_param MYSQL_COMMENTS "Enable comments?" "${default_comments}"
+      help_note "Running " "*mysql_connect" " will save these parameters for future use"
+      return 0
    }
    
    # If no password parameter passed, mangle the command line to request it entered manually
@@ -84,5 +93,8 @@ ${FUNCNAME}() \"[SQL command]\" or \"source [scriptname]\"\n \
    fi
 }
 export -f mysql_run
+
+alias | grep mysql
+typeset -F | grep mysql
 
 mysql --version

@@ -3,7 +3,7 @@ script_echo "Git s[ucks]etup..."
 # Install Git as needed
 #git --version 2>/dev/null || sudo ${PACKAGE_MANAGER} -y install git
 
-if [ ! -w ~/.gitconfig ]; then
+if [[ ! -a ~/.gitconfig ]]; then
    git config --global user.name "Douglas Crews"
    git config --global user.email "${git_email}"
    git config --global credential.helper store
@@ -59,5 +59,60 @@ function git_branch_list() {
 }
 
 alias git_status='${ECHODO} git status --show-stash --branch --verbose'
+
+git config --global user.name >/dev/null || echo "Git username not set!"
+git config --global user.email >/dev/null || echo "Git email not set!"
+
+function git_generate_key() {
+   echo "Generating GPG key..."
+   gpg --full-generate-key
+
+   echo "Listing GPG keys..."
+   gpg --list-secret-keys --keyid-format LONG
+
+   # Extract the GPG key ID
+   KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep -E 'sec.*rsa' | head -n 1 | awk '{print $2}' | cut -d'/' -f2)
+   if [ -z "$KEY_ID" ]; then
+       echo "Error: No GPG key found. Please ensure you generated a key."
+       exit 1
+   fi
+
+   echo "Your GPG key ID is: $KEY_ID"
+
+   echo "Configuring Git for GPG key..."
+   git config --global user.signingkey "$KEY_ID"
+   git config --global commit.gpgSign true
+   git config --global gpg.program gpg
+
+   echo "Exporting GPG public key..."
+   gpg --armor --export "$KEY_ID" > gpgkey.asc
+   echo "Your GPG public key has been saved to 'gpgkey.asc'."
+   echo "Please copy the contents of this file to GitHub."
+
+   # Open the GPG key file for easy copying
+   if command -v xdg-open > /dev/null; then
+       xdg-open gpgkey.asc
+   elif command -v open > /dev/null; then
+       open gpgkey.asc
+   else
+       echo "Unable to automatically open the file. Please open 'gpgkey.asc' manually."
+   fi
+
+   echo "Follow these steps to add the key to GitHub:"
+   echo "1. Go to GitHub Settings -> SSH and GPG keys -> New GPG key"
+   echo "2. Copy the contents of 'gpgkey.asc' and paste it into the key field."
+   echo "3. Save the key."
+
+   echo "Creating a test signed commit..."
+   git commit -S -m "Test signed commit"
+
+   echo "Pushing the signed commit..."
+   git push
+
+   echo "Check the commit on GitHub. You should see a 'Verified' badge next to the commit message."
+}
+
+#alias | grep git_
+#functions | grep git_
 
 git --version
