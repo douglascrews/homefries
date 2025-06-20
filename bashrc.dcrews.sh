@@ -308,20 +308,17 @@ function fuck() {
    fi
 }
 
-# try...catch...die
-function say() { echo "${@}" >&2; }
-function die() {
-   say "ERROR executing: $*";
+# try...failed
+function failed() {
    if [[ $(ps -T | wc -l) -gt 5 ]]; then
       # We can exit the script without killing the bash console
-      exit 111;
+      exit -1;
    else
       # Do not exit the primary console
       echo "Exited.";
    fi;
 }
-function catch() { "${@}" || die "ERROR: ${*}"; }
-function try() { say "Attempting: ${*}" && catch "$@"; }
+function try() { ${ECHODO} "${@}" || failed "${@}"; }
 
 function sha256() {
    # This uses the public key
@@ -332,13 +329,23 @@ function sha256() {
 function md5() {
    # help
    [[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
-      echo -e "${FUNCNAME} path/to/key.pem"; \
-      echo -e "\t path/to/key.pem \tPath to SSH key"; \
-      return 0; \
+      help_headline "${FUNCNAME}" "path/to/key.pem"
+      help_param "path/to/key.pem" "Path to SSH key"
+      return 0;
    }
    local key_file="$1";
    [[ -z "${key_file}" ]] && { echo 'Key is required'; return 0; }
    openssl rsa -in ${1} -pubout -outform DER | openssl md5 -c
+}
+
+function psgrep() {
+   [[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && {
+      help_headline "${FUNCNAME}" "search_text"
+      help_param "search_text" "Text to search for within 'ps -ef' output"
+      help_note "This function omits the pid line for itself."
+      return 0;
+   }
+   ps -ef | grep ${1} | grep -v " grep "
 }
 
 which dpkg >/dev/null 2>&1 && alias deb_install='${ECHODO} sudo dpkg -i' && alias deb_install

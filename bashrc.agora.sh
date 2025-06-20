@@ -10,11 +10,10 @@ function agora_dev_run() {
    fi
    ${ECHODO} sdk env install
    ${ECHODO} sdk env
-   ${ECHODO} docker-compose up -d postgres postgres-test
-   ${ECHODO} mvn clean install spring-boot:run >agora.log 2>&1 &
+   try docker-compose up -d postgres postgres-test
+   try ./mvnw clean install spring-boot:run >agora.log 2>&1 &
    echo "fg, Ctrl-C to stop the madness"
    local while_tries=60
-   local while_loop_test='curl --silent http://localhost:8080'
    local result=-1
    while [[ $result -ne 0 ]]; do
       if [[ ${while_tries} -lt 0 ]]; then
@@ -25,7 +24,7 @@ function agora_dev_run() {
          sleep 5
       fi
       echo -n "."
-      $(while_loop_test) >/dev/null 2>&1; result=$?
+      $(curl --silent http://localhost:8080 >/dev/null 2>&1); result=$?
    done
    echo "Agora is running."
    "${BROWSER}" http://localhost:8080
@@ -38,21 +37,21 @@ function agora_dev_run_h2() {
    fi
    ${ECHODO} sdk env install
    ${ECHODO} sdk env
-   ${ECHODO} mvn clean install spring-boot:run -Dspring-boot.run.profiles=dev >agora.log 2>&1 &
+   try ./mvnw clean install
+   try ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev >agora.log 2>&1 &
    echo "fg, Ctrl-C to stop the madness"
    local while_tries=60
-   local while_loop_test='curl --silent http://localhost:8080'
    local result=-1
    while [[ ${result} -ne 0 ]]; do
       if [[ ${while_tries} -lt 0 ]]; then
          echo "ERROR: Failed to start Agora."
          return 1
       else
+         echo -n "."
          ((while_tries=while_tries-1))
          sleep 5
       fi
-      echo -n "."
-      $(while_loop_test) >/dev/null 2>&1; result=$?
+      $(curl --silent http://localhost:8080 >/dev/null 2>&1); result=$?
    done
    echo "Agora is running."
    "${BROWSER}" http://localhost:8080
@@ -82,18 +81,17 @@ function agora_dev_restart() {
 #   ${ECHODO} mvn spring-boot:start -Dspring-boot.run.profiles=dev >agora.log 2>agora_dev.err &
 #   echo "mvn spring-boot:stop to stop the madness"
 #   local while_tries=30
-#   alias while_loop_test='curl --silent http://localhost:8080'
-#   $(while_loop_test) >/dev/null 2>&1; result=$?
+#   local result=-1
 #   while [ $result -ne 0 ]; do
 #      if [[ ${while_tries} -lt 0 ]]; then
 #         echo "ERROR: Failed to start Agora."
 #         return 1
 #      else
+#         echo -n "."
 #         ((while_tries=while_tries-1))
 #         sleep 5
 #      fi
-#      echo -n "."
-#      $(while_loop_test) >/dev/null 2>&1; result=$?
+#      $(curl --silent http://localhost:8080 >/dev/null 2>&1); result=$?
 #   done
 #   echo "Agora is running."
 #   "${BROWSER}" http://localhost:8080
@@ -108,8 +106,8 @@ alias agora_test_unit='mvn test'
 ##### LOCAL MODE #####
 # Postgres database local
 function agora_test_integration() {
-   docker-compose up -d postgres test
-   mvn test -Dspring.profiles.active=docker-test
+   try docker-compose up -d postgres test
+   try ./mvnw test -Dspring.profiles.active=docker-test
 }
 
 alias | grep agora

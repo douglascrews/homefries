@@ -7,6 +7,10 @@ script_echo "PostgreSQL setup..."
 #su - postgres
 #psql
 
+alias postgres_start='sudo systemctl postgresql start'
+alias postgres_stop='sudo systemctl postgresql stop'
+alias postgres_status='sudo systemctl postgresql status'
+
 # Convenience/documentation function for PostgreSQL connection
 function psql_connect() {
    # default params
@@ -92,13 +96,13 @@ function psql_test() {
    }
 
    # Parameters are positional; order matters
-   PGHOST=${1:-${PGHOST:-${default_host}}}
-   PGPORT=${2:-${PGPORT:-${default_port}}}
-   PGUSER=${3:-${PGUSER:-${default_user}}}
-   PSQL_PW=${4:-${PSQL_PW:-${default_password}}}
-   PGDATABASE=${5:-${PGDATABASE:-${default_database}}}
-   PSQL_WAITSEC=${6:-${PSQL_WAITSEC:-${default_wait_seconds}}}
-   PGPASSWORD=${PSQL_PW} ${ECHODO} pg_isready --host=${PGHOST} --port=${PGPORT} --username=${PGUSER} --dbname=${PGDATABASE} --timeout=${PSQL_WAITSEC} || echo -e "${colorRed}psql connection failed.${colorReset}"
+   export PGHOST=${1:-${PGHOST:-${default_host}}}
+   export PGPORT=${2:-${PGPORT:-${default_port}}}
+   export PGUSER=${3:-${PGUSER:-${default_user}}}
+   export PSQL_PW=${4:-${PSQL_PW:-${default_password}}}
+   export PGDATABASE=${5:-${PGDATABASE:-${default_database}}}
+   export PSQL_WAITSEC=${6:-${PSQL_WAITSEC:-${default_wait_seconds}}}
+   export PGPASSWORD=${PSQL_PW} ${ECHODO} pg_isready --host=${PGHOST} --port=${PGPORT} --username=${PGUSER} --dbname=${PGDATABASE} --timeout=${PSQL_WAITSEC} || echo -e "${colorRed}psql connection failed.${colorReset}"
    # Fallback if pg_isready is not found
    #PGPASSWORD=${4:-${PSQL_PW}} ${ECHODO} psql --host=${1:-${PGHOST:-${default_host}}} --port=${2:-${PGPORT:-${default_port}}} --username=${3:-${PGUSER:-${default_user}}} --dbname=${5:-${PGDATABASE:-${default_database}}} --command='SELECT current_database(), current_user;' || echo -e "${colorRed}psql connection failed.${colorReset}"
 }

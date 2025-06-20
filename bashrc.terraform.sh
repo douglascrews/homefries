@@ -1,7 +1,8 @@
 script_echo "Terraform setup..."
 
 alias tf=terraform
-tfy() {
+
+function tfy() {
    ${ECHODO} terraform ${*} -auto-approve
 }
 

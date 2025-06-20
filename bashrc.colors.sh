@@ -20,14 +20,15 @@ export colorReset='\e[0m'
 # echo -e ${colorBlack} Black ${colorDarkGray} Dark Gray ${colorBlue} Blue ${colorLightBlue} Light Blue ${colorGreen} Green ${colorLightGreen} Light Green ${colorCyan} Cyan ${colorLightCyan} Light Cyan ${colorRed} Red ${colorLightRed} Light Red ${colorPurple} Purple ${colorLightPurple} Light Purple ${colorBrownOrange} Brown/Orange ${colorYellow} Yellow ${colorLightGray} Light Gray ${colorWhite} White ${colorReset}
 
 # Color formatting of function help messages:
-#[[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && { \
-#   help_headline "${FUNCNAME}" "name" "[age]" "[gender]"
-#   help_param "name" "This is a required parameter"
-#   help_param "[age]" "This is an optional parameter with no default"
-#   help_param "[gender]" "This is an optional parameter with a default value" "female"
-#   help_note "*Note: " "This function has a side effect. " "!It might destroy the world."
-#   return 0;
-#}
+#   local default_gender="female"
+#   [[ "${*}" =~ --help ]] || [[ "${#}" < 1 ]] && {
+#      help_headline "${FUNCNAME}" "name" "[age]" "[gender]"
+#      help_param "name" "This is a required parameter"
+#      help_param "[age]" "This is an optional parameter with no default"
+#      help_param "[gender]" "This is an optional parameter with a default value" "${default_gender}"
+#      help_note "*Note: " "This function has a side effect. " "!It might destroy the world."
+#      return 0;
+#   }
 
 export color_param_required=${colorLightCyan} # parameter, required; param_name
 export color_param_optional=${colorCyan} # parameter, optional; [param_name]

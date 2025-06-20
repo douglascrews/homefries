@@ -29,7 +29,8 @@ function mysql_connect() {
       help_param "[protocol]" "Protocol to connect with" "\${MYSQL_PROTOCOL} or ${default_protocol}"
       help_param "[comments?]" "Enable comments?" "\${MYSQL_COMMENTS} or ${default_comments}"
       help_note "*Parameters are positional" ", so if you want to specify a database, you must also specify host, port, user, password. Sue me, I'm lazy."
-      help_note "!Beware, mysql password parameters are passed in clear text. Boo!"
+      help_note "!Beware, " "*mysql password parameters are passed in clear text. " "!Boo!"
+      help_note "Pass '.' for any parameters to use the saved env variable value"
       return 0
    }
    
@@ -37,13 +38,13 @@ function mysql_connect() {
    [[ -n "${4:-${MYSQL_PW}}" ]] && local password_equal="="
 
    # Save defaults for future executions
-   [[ -n "${1}" ]] && export MYSQL_HOST=${1:-${default_host}}
-   [[ -n "${2}" ]] && export MYSQL_PORT=${2:-${default_port}}
-   [[ -n "${3}" ]] && export MYSQL_USER=${3:-${default_user}}
-   [[ -n "${4}" ]] && export MYSQL_PW=${4:-${default_password}}
-   [[ -n "${5}" ]] && export MYSQL_DB=${5:-${default_database}}
-   [[ -n "${6}" ]] && export MYSQL_PROTOCOL=${6:-${default_protocol}}
-   [[ -n "${7}" ]] && export MYSQL_COMMENTS=${7:-${default_comments}}
+   [[ "${1}" != "." ]] && export MYSQL_HOST=${1:-${default_host}}
+   [[ "${2}" != "." ]] && export MYSQL_PORT=${2:-${default_port}}
+   [[ "${3}" != "." ]] && export MYSQL_USER=${3:-${default_user}}
+   [[ "${4}" != "." ]] && export MYSQL_PW=${4:-${default_password}}
+   [[ "${5}" != "." ]] && export MYSQL_DB=${5:-${default_database}}
+   [[ "${6}" != "." ]] && export MYSQL_PROTOCOL=${6:-${default_protocol}}
+   [[ "${7}" != "." ]] && export MYSQL_COMMENTS=${7:-${default_comments}}
    shift; shift; shift; shift; shift; shift; shift;
 
    # Beware, mysql password parameters are passed in clear text. Boo!
@@ -93,6 +94,17 @@ function mysql_run() {
    fi
 }
 export -f mysql_run
+
+function mysql_env_reset() {
+   unset MYSQL_HOST
+   unset MYSQL_PORT
+   unset MYSQL_USER
+   unset MYSQL_PW
+   unset MYSQL_DB
+   unset MYSQL_PROTOCOL
+   unset MYSQL_COMMENTS
+}
+export -f mysql_env_reset
 
 alias | grep mysql
 typeset -F | grep mysql

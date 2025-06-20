@@ -19,6 +19,14 @@ eval $(ssh-agent -s) >/dev/null 2>&1
 alias git_identities='ssh-add -l'
 alias git_can_connect='ssh -T git@github.com'
 
+if [[ $(ssh -T git@github.com >/dev/null 2>&1) -ne 1 ]]; then
+   echo Adding default keys...
+   ssh-add # ~/.ssh/id_rsa, ~/.ssh/id_dsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ecdsa_sk, ~/.ssh/id_ed25519, and ~/.ssh/id_ed25519_sk
+   ssh-add ~/.ssh/*.pem
+   git_identities
+   git_can_connect
+fi
+
 function git_branch_show
 {
    git branch --show-current >/dev/null 2>&1 && echo "($(git branch --show-current))";
@@ -38,7 +46,8 @@ function git_revert() {
 export -f git_revert
 
 function git_pull() {
-   ${ECHODO} git pull --verbose --autostash --prune --set-upstream --progress # --recurse-submodules=yes
+   #  --set-upstream docs say no param required/possible, but in practice it complains "you need to specify exactly one branch with the --set-upstream option"
+   ${ECHODO} git pull --verbose --autostash --prune --progress # --recurse-submodules=yes --set-upstream
 }
 export -f git_pull
 
@@ -74,7 +83,7 @@ function git_generate_key() {
    KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep -E 'sec.*rsa' | head -n 1 | awk '{print $2}' | cut -d'/' -f2)
    if [ -z "$KEY_ID" ]; then
        echo "Error: No GPG key found. Please ensure you generated a key."
-       exit 1
+       failed
    fi
 
    echo "Your GPG key ID is: $KEY_ID"
@@ -85,17 +94,17 @@ function git_generate_key() {
    git config --global gpg.program gpg
 
    echo "Exporting GPG public key..."
-   gpg --armor --export "$KEY_ID" > gpgkey.asc
-   echo "Your GPG public key has been saved to 'gpgkey.asc'."
+   gpg --armor --export "$KEY_ID" > ~/.ssh/gpgkey.asc
+   echo "Your GPG public key has been saved to '~/.ssh/gpgkey.asc'."
    echo "Please copy the contents of this file to GitHub."
 
    # Open the GPG key file for easy copying
    if command -v xdg-open > /dev/null; then
-       xdg-open gpgkey.asc
+       xdg-open ~/.ssh/gpgkey.asc
    elif command -v open > /dev/null; then
-       open gpgkey.asc
+       open ~/.ssh/gpgkey.asc
    else
-       echo "Unable to automatically open the file. Please open 'gpgkey.asc' manually."
+       echo "Unable to automatically open the file. Please open '~/.ssh/gpgkey.asc' manually."
    fi
 
    echo "Follow these steps to add the key to GitHub:"
