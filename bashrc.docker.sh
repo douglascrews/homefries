@@ -32,8 +32,9 @@ function d_run() {
       docker_image=${1}
       docker_params=${docker_params[@]/${1}} # remove this param
    fi
+   local image_name=$(echo ${docker_image} | sed -e 's/:/-/g')
    ${ECHODO} docker pull ${docker_image}
-   ${ECHODO} docker run -it --rm=true --name temp ${docker_params} ${docker_image}
+   ${ECHODO} docker run -it --rm=true --name ${image_name} ${docker_image} ${docker_params}
 }
 
 function d_bash() {
@@ -82,7 +83,8 @@ function d_build {
       dockerfile=${1}
       docker_params=${docker_params[@]/${1}} # remove this param
    fi
-   ${ECHODO} docker buildx build --file=${dockerfile} . ${docker_params}
+   local build_name=$(basename ${PWD})
+   ${ECHODO} docker buildx build --file=${dockerfile} --label ${build_name} ${docker_params} .
 }
 
 function d_ps {
@@ -163,6 +165,13 @@ function d_volumes {
       docker_params=${docker_params[@]/--full} # remove this param
    fi
    ${ECHODO} docker volume ls ${docker_format} ${docker_params}
+}
+
+function d_pull() {
+   ${ECHODO} docker pull ${1}
+   ${ECHODO} docker scout quickview ${1}
+   ${ECHODO} docker scout cves ${1}
+   ${ECHODO} docker scout recommendations ${1}
 }
 
 #if [[ ! -x /usr/local/bin/docker-compose ]]; then
