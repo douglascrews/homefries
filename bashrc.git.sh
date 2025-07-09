@@ -51,7 +51,11 @@ function git_pull() {
 }
 export -f git_pull
 
-alias git_set_upstream='${ECHODO} git branch --set-upstream-to=origin/$(git symbolic-ref --short HEAD)'
+function git_set_upstream() {
+   local git_upstream=$(git symbolic-ref --short HEAD)
+   ${ECHODO} git branch --set-upstream-to=origin/${git_upstream}
+   ${ECHODO} git pull --set-upstream origin ${git_upstream}
+}
 
 function git_checkout() {
    ${ECHODO} git stash save
@@ -68,6 +72,7 @@ function git_branch_list() {
 }
 
 alias git_status='${ECHODO} git status --show-stash --branch --verbose'
+alias git_autocommit='${ECHODO} git commit -m $(git status | grep -e '---' -e '+++')'
 
 git config --global user.name >/dev/null || echo "Git username not set!"
 git config --global user.email >/dev/null || echo "Git email not set!"
